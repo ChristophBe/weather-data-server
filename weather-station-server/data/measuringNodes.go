@@ -13,7 +13,10 @@ type MeasuringNode struct {
 	Lng  float64 	`json:"lng"`
 }
 
-
+const(
+	createStationStatement       = "CREATE (n:MeasuringNode {name: {name}, lat: {lat}, lng: {lng}})"
+	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN id(m), m.name, m.lat, m.lng "
+)
 
 
 func CreateMeasuringNode( con bolt.Conn, node MeasuringNode)  {
@@ -37,6 +40,7 @@ func CreateMeasuringNode( con bolt.Conn, node MeasuringNode)  {
 	// Closing the statment will also close the rows
 	st.Close()
 }
+
 func FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
 
 	st:= prepareStatement(fetchMeasuringNodesStmt,con)

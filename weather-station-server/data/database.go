@@ -1,17 +1,13 @@
 package data
 
 import (
+	"../configs"
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 )
 
 // Constants to be used throughout the example
 const (
-	URI                          = "bolt://neo4j:password123@localhost:7687"
-	createMeasurementStatement   = "MATCH (n:MeasuringNode)  WHERE Id(n) = {stationId} CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measuring {timeStamp: {timeStamp}, pressure: {pressure},temperature: {temperature},humidity: {humidity}})"
-	createStationStatement       = "CREATE (n:MeasuringNode {name: {name}, lat: {lat}, lng: {lng}})"
-	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN id(m), m.name, m.lat, m.lng "
-	fetchAllMeasuringForNodeStmt = "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN id(m), m.timeStamp, m.temperature, m.humidity, m.pressure"
-
+	URI = "bolt://neo4j:" + configs.NEO4J_PASSWORD + "@" + configs.NEO4J_HOST
 )
 
 
@@ -40,7 +36,6 @@ func queryStatement(st bolt.Stmt,params map[string]interface{}) bolt.Rows {
 	handleError(err)
 	return rows
 }
-
 
 
 

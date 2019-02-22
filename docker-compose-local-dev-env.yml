@@ -8,6 +8,8 @@ services:
     volumes:
     - ./neo4j/data:/data
 
+  #app:
+
 #  redis:
 #    image: redis:alpine
 #    ports:
