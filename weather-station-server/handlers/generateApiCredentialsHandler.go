@@ -2,23 +2,15 @@ package handlers
 
 import (
 	"../data"
+	"../jwt"
+	"../utils"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func RandStringRunes(n int) string {
-
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
 
 type credentialsExternal struct {
 	Secret string
@@ -32,14 +24,21 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 
 	_, err = data.FetchAuthTokenByNodeId(con, nodeId)
 
-	if err == nil {
 
-		handleError(w, handlerError{Err:err,ErrorMessage:"can not create token"}, http.StatusBadRequest)
+	userId, err := jwt.GetUserIdBy(request)
+	if err != nil{
+
+		handleError(w,handlerError{Err:err, ErrorMessage:"can not authenticate user"}, http.StatusForbidden)
 		return
 	}
 
-	//TODO: Check if current user is owner of this measuring Node
-	secret:= RandStringRunes(32)
+	owner ,err :=  data.FetchOwnerByMesuringNode(nodeId)
+	if err != nil || userId != owner.Id {
+		handleError(w,handlerError{Err:err, ErrorMessage:"user is not owner"}, http.StatusForbidden)
+	}
+
+
+	secret:= utils.RandStringRunes(32)
 
 	hash,err := bcrypt.GenerateFromPassword([]byte(secret),bcrypt.DefaultCost)
 	if err != nil {
