@@ -12,6 +12,7 @@ import (
 
 func main() {
 
+	log.Printf("Init Server")
 	router := mux.NewRouter()
 
 	rand.Seed(time.Now().Unix())
@@ -21,7 +22,14 @@ func main() {
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
+	router.Path("/users").HandlerFunc(handlers.CreateUserHandler).Methods(http.MethodPost)
+	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
+
+	log.Printf("Server started")
+	log.Printf("You can access the Api at http://localhost:8080")
+
 	err := http.ListenAndServe(":8080", corsHandler(logRequest(router)))
+
 	if err != nil {
 		log.Fatal(err)
 	}

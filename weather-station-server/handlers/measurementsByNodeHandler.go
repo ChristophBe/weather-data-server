@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"../data"
+	"../jwt"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
@@ -11,6 +12,33 @@ import (
 	"strings"
 	"time"
 )
+
+
+
+func CheckNodePermissionForUser(r *http.Request) bool {
+
+	nodeId, err := getNodeIDFormRequest(r);
+	if err != nil{
+		return false
+	}
+
+	node, err := data.FetchAllMeasuringNodeById(nodeId)
+	if err != nil{
+		return false
+	}
+
+	if node.IsPublic {
+		return true
+	}
+
+	userId, err := jwt.GetUserIdBy(r)
+	if err != nil{
+		return false
+	}
+
+	relations := data.FetchAllMeasuringNodeUserRelations(nodeId,userId)
+	return len(relations) > 0
+}
 
 func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 	con := data.CreateConnection()
@@ -52,6 +80,14 @@ func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 func GetAllMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 	con := data.CreateConnection()
 	defer con.Close()
+
+	isNotAllowedToAccess := !CheckNodePermissionForUser(r)
+	if isNotAllowedToAccess {
+		handleError(w, handlerError{Err:nil,ErrorMessage:"Access Forbidden"}, http.StatusForbidden)
+		return
+
+	}
+
 
 	nodeId, err := getNodeIDFormRequest(r)
 
