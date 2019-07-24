@@ -10,6 +10,7 @@ func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
 	con := data.CreateConnection()
 	defer con.Close()
 
-	nodes := data.FetchAllMeasuringNodes(con)
+	nodeRepo := data.MeasuringNodeRepository{}
+	nodes := nodeRepo.FetchAllMeasuringNodes(con)
 	writeJsonResponse(nodes, w)
 }

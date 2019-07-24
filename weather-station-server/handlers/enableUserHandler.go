@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-	"reflect"
 	"strings"
 )
 
@@ -19,22 +18,13 @@ type EnableTokenResp struct {
 }
 func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 
-	defer func(){
-		if r := recover(); r != nil {
-			if reflect.TypeOf(r).String() == "handlerError" {
-				handleError(w, r.(handlerError), r.(handlerError).status)
-			} else {
-				handleError(w,handlerError{Err:r.(error), ErrorMessage:"unexpected Failure"}, http.StatusBadRequest)
-			}
-
-		}
-	}()
+	defer recoverHandlerErrors(w)
 
 	var enableToken EnableTokenDTO
 
-	err := readBody(request,&enableToken)
+	err := readBody(request, &enableToken)
 	if err != nil {
-		panic(handlerError{Err: err, ErrorMessage:"invalid body or invalid token"})
+		panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
 	}
 
 	email, secret := parseToken(enableToken)
@@ -67,6 +57,8 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 	}
 
 }
+
+
 
 func enableUser(user data.User) {
 	user.IsEnabled = true

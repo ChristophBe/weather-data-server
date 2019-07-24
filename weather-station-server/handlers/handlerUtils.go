@@ -5,14 +5,22 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"time"
 )
+
+
+const(
+	InvalidBody = "invalid Body"
+	NotAuthorized = "user not Authorized"
+)
+
 
 type handlerError struct {
 	Err          error     `json:"-"`
 	ErrorMessage string    `json:"error"`
 	Timestamp    time.Time `json:"timestamp"`
-	status    	 int	   `json:"-"`
+	Status    	 int	   `json:"-"`
 }
 
 func writeJsonResponse( data interface{}, w http.ResponseWriter) error{
@@ -60,4 +68,24 @@ func readBody(r *http.Request , item interface{}) error {
 		return err
 	}
 	return nil
+}
+
+
+func recoverHandlerErrors(w http.ResponseWriter) {
+	if r := recover(); r != nil {
+		if reflect.TypeOf(r).String() == "handlerError" {
+			handleError(w, r.(handlerError), r.(handlerError).Status)
+		} else {
+			log.Print(r)
+			handleError(w, handlerError{Err: nil, ErrorMessage: "unexpected Failure"}, http.StatusBadRequest)
+		}
+
+	}
+
+}
+
+func panicIfErrorNonNil(err error, errorMessage string, status int){
+	if err != nil {
+		panic(handlerError{Err:err,ErrorMessage:errorMessage,Status:status})
+	}
 }

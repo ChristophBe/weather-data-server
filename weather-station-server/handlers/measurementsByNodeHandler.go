@@ -22,7 +22,9 @@ func CheckNodePermissionForUser(r *http.Request) bool {
 		return false
 	}
 
-	node, err := data.FetchAllMeasuringNodeById(nodeId)
+
+	nodeRepo := data.MeasuringNodeRepository{}
+	node, err := nodeRepo.FetchAllMeasuringNodeById(nodeId)
 	if err != nil{
 		return false
 	}
@@ -36,7 +38,7 @@ func CheckNodePermissionForUser(r *http.Request) bool {
 		return false
 	}
 
-	relations := data.FetchAllMeasuringNodeUserRelations(nodeId,userId)
+	relations := nodeRepo.FetchAllMeasuringNodeUserRelations(nodeId,userId)
 	return len(relations) > 0
 }
 
@@ -158,3 +160,4 @@ func NodeAuthorisationHandler(nodeId int64, r *http.Request) error{
 	return nil
 
 }
+

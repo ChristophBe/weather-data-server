@@ -94,6 +94,10 @@ func decodeTokenPart(encoded string, destination interface{}) error{
 func Verify(token string)(TokenPayload,error) {
 	tokenParts := strings.Split(token,".")
 
+
+	if len(tokenParts) < 3 {
+		return TokenPayload{}, errors.New("token not found")
+	}
 	encodedHeader := tokenParts[0]
 	encodedPayload := tokenParts[1]
 	encodedSecret := tokenParts[2]

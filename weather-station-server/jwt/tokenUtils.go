@@ -16,7 +16,7 @@ func GetTokenFormResponse(r *http.Request) (string, error){
 
 	authHeaderParts := strings.Split(auth," ")
 	if len(authHeaderParts)<2 {
-		return "", errors.New("Token not Found")
+		return "", errors.New("token not found")
 	}
 	token := authHeaderParts[1]
 	return token, nil

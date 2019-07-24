@@ -27,24 +27,18 @@ type User struct {
 
 }
 
-func check( item interface{}, default_val  interface{}) interface{}{
-	if item == nil{
-		return default_val
-	}
-	return item
 
-}
 
 func paresUserFormLine(row []interface{}) User {
 	user := User{
-		Id: row[0].(int64),
-		LastLogin: time.Unix(row[1].(int64), 0),
-		CreationTime: time.Unix(row[2].(int64),0),
-		Email: row[3].(string),
-		Username: row[4].(string),
-		PasswordHash: []byte(row[5].(string)),
-		IsEnabled: check(row[6],false).(bool),
-		EnableSecretHash: []byte(check(row[7],"").(string))}
+		Id:               parseRowInt(row[0],0),
+		LastLogin:        parseRowTime(row[1],time.Unix(0,0)),
+		CreationTime:     parseRowTime(row[2],time.Unix(0,0)),
+		Email:            parseRowString(row[3],""),
+		Username:         parseRowString(row[4],""),
+		PasswordHash:     parseRowBytes(row[5],[]byte("")),
+		IsEnabled:        parseRowBool(row[6],false),
+		EnableSecretHash: parseRowBytes(row[7],[]byte(""))}
 
 	return user
 }

@@ -1,9 +1,11 @@
 package data
 
 import (
-	"fmt"
+	"../configs"
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"io"
+	"log"
 )
 
 type MeasuringNode struct {
@@ -12,40 +14,22 @@ type MeasuringNode struct {
 	Lat  float64 	`json:"lat"`
 	Lng  float64 	`json:"lng"`
 	IsPublic bool 	`json:"is_public"`
+	IsOutdoors bool `json:"is_outdoors"`
 }
 
 const(
-	createStationStatement       = "CREATE (n:MeasuringNode {name: {name}, lat: {lat}, lng: {lng}, isPublic: {isPublic}})"
-	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN id(m), m.name, m.lat, m.lng, m.isPublic "
-	fetchMeasuringNodesByIdStmt      = "MATCH (m:MeasuringNode) WHERE id(m) = {nodeId} RETURN id(m), m.name, m.lat, m.lng, m.isPublic "
-	fetchMeasuringNodesUserRelations ="MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
+	measuringModeQueryString 	 = "id(m), m.name, m.lat, m.lng, m.isPublic, m.isOutdoors"
+	createStationStatement       = "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN " + measuringModeQueryString
+	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN " + measuringModeQueryString
+	fetchMeasuringNodesByIdStmt      = "MATCH (m:MeasuringNode) WHERE id(m) = {nodeId} RETURN  "+ measuringModeQueryString
+	fetchMeasuringNodesUserRelations =" MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
 )
 
 
-func CreateMeasuringNode( con bolt.Conn, node MeasuringNode)  {
+type MeasuringNodeRepository struct {
 
-	st := prepareStatement(createStationStatement,con)
-
-	//{{Name: {Name}, Lat: {Lat}, lng: {lng}
-
-	result, err := st.ExecNeo(map[string]interface{}{
-		"name": node.Name,
-		"lat":  node.Lat,
-		"lng":  node.Lng,
-		"isPublic": node.IsPublic,
-	})
-	handleError(err)
-
-	numResult, err := result.RowsAffected()
-	handleError(err)
-
-	fmt.Printf("CREATED ROWS: %d\n", numResult) // CREATED ROWS: 1
-
-	// Closing the statment will also close the rows
-	st.Close()
 }
-
-func FetchAllMeasuringNodeById(nodeId int64 ) (MeasuringNode,error) {
+func (m *MeasuringNodeRepository) FetchAllMeasuringNodeById(nodeId int64 ) (MeasuringNode,error) {
 
 	con := CreateConnection()
 	defer con.Close()
@@ -63,13 +47,13 @@ func FetchAllMeasuringNodeById(nodeId int64 ) (MeasuringNode,error) {
 		return measuringNode, err
 
 	} else if err != io.EOF {
-		measuringNode = parseMeasuringNodeFromRow(row)
+		measuringNode = m.parseMeasuringNodeFromRow(row)
 	}
 	return measuringNode, nil
 }
 
 
-func FetchAllMeasuringNodeUserRelations(nodeId int64 , userId int64) []string {
+func (MeasuringNodeRepository) FetchAllMeasuringNodeUserRelations(nodeId int64 , userId int64) []string {
 
 	con := CreateConnection()
 	defer con.Close()
@@ -102,7 +86,7 @@ func FetchAllMeasuringNodeUserRelations(nodeId int64 , userId int64) []string {
 
 
 
-func FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
+func (m *MeasuringNodeRepository) FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
 
 	st:= prepareStatement(fetchMeasuringNodesStmt,con)
 	rows := queryStatement(st ,nil)
@@ -116,7 +100,7 @@ func FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
 		if err != nil && err != io.EOF {
 			panic(err)
 		} else if err != io.EOF {
-			node := parseMeasuringNodeFromRow(row)
+			node := m.parseMeasuringNodeFromRow(row)
 			nodes = append(nodes,node)
 		}
 	}
@@ -128,14 +112,68 @@ func FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
 }
 
 
-func parseMeasuringNodeFromRow(row []interface{}) MeasuringNode {
+func (MeasuringNodeRepository) parseMeasuringNodeFromRow(row []interface{}) MeasuringNode {
 	node := MeasuringNode{
-		Id:row[0].(int64),
-		Name:row[1].(string),
-		Lat:row[2].(float64),
-		Lng:row[3].(float64),
-		IsPublic:row[4].(bool),
+		Id:			parseRowInt(row[0],0),
+		Name:		parseRowString(row[1],""),
+		Lat:		parseRowFloat(row[2],0.0),
+		Lng:		parseRowFloat(row[3],0.0),
+		IsPublic: 	parseRowBool(row[4],false),
+		IsOutdoors: parseRowBool(row[5],true),
 	}
 	return node
 }
 
+
+func (m *MeasuringNodeRepository) CreateMeasuringNode(node MeasuringNode, userId int64) (MeasuringNode, error) {
+	var (
+		err      error
+		driver   neo4j.Driver
+		session  neo4j.Session
+		result   neo4j.Result
+		resultNode 	 MeasuringNode
+	)
+
+	driver, err = neo4j.NewDriver("bolt://" + configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
+	if err != nil {
+		return resultNode, err
+	}
+	defer driver.Close()
+
+	session, err = driver.Session(neo4j.AccessModeWrite)
+	if err != nil {
+		return resultNode, err
+	}
+	defer session.Close()
+
+	log.Print(node)
+
+	params := map[string]interface{}{
+		"name": node.Name,
+		"lat":  node.Lat,
+		"lng":  node.Lng,
+		"isPublic": node.IsPublic,
+		"isOutdoors": node.IsOutdoors,
+		"ownerId": userId,
+	}
+
+	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err = transaction.Run( createStationStatement, params)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if result.Next() {
+			resultNode = m.parseMeasuringNodeFromRow(result.Record().Values())
+			return resultNode, nil
+		}
+
+		return nil, result.Err()
+	})
+	if err != nil {
+		return resultNode, err
+	}
+
+	return resultNode, nil
+}

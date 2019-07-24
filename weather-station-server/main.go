@@ -12,12 +12,14 @@ import (
 
 func main() {
 
+
 	log.Printf("Init Server")
 	router := mux.NewRouter()
 
 	rand.Seed(time.Now().Unix())
 
 	router.Path("/nodes").HandlerFunc(handlers.FetchNodesHandler).Methods(http.MethodGet)
+	router.Path("/nodes").HandlerFunc(handlers.AddNodeHandler).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.PostMeasurementForNodeHandler).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
@@ -66,4 +68,5 @@ func corsHandler(handler http.Handler) http.Handler {
 		}
 	})
 }
+
 
