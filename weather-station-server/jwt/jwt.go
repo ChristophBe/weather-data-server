@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/johnnadratowski/golang-neo4j-bolt-driver/errors"
+	"log"
 	"strings"
 	"time"
 )
@@ -36,9 +37,7 @@ func GenerateToken(user data.User)( signedToken string,err error ){
 		return
 	}
 
-
-	validDuration := time.Duration(24  * 60 *60 * 1000)
-	expirationTime := time.Now().Add(validDuration)
+	expirationTime := time.Now().Add(time.Hour * time.Duration(24))
 
 	tokenPayload := TokenPayload{Expiration:expirationTime,Subject:user.Id, Name: user.Username}
 
@@ -78,7 +77,7 @@ func validMAC(expacted string, messageMAC []byte) bool {
 	return hmac.Equal(messageMAC, expectedMAC)
 }
 
-func decodeTokenPayloads(encoded string, destination interface{}) error{
+func decodeTokenPart(encoded string, destination interface{}) error{
 
 	headerBytes, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
@@ -101,7 +100,7 @@ func Verify(token string)(TokenPayload,error) {
 
 	// Decode token-header
 	var header TokenHeader
-	err := decodeTokenPayloads(encodedHeader,&header)
+	err := decodeTokenPart(encodedHeader,&header)
 	if err != nil {
 		return TokenPayload{}, err
 	}
@@ -124,18 +123,23 @@ func Verify(token string)(TokenPayload,error) {
 		return TokenPayload{}, errors.New("invalid token")
 	}
 
-	now := time.Now()
+
 
 
 
 	// Decode token-payload
 	var payload TokenPayload
-	err = decodeTokenPayloads(encodedPayload,&payload)
+	err = decodeTokenPart(encodedPayload,&payload)
 	if err != nil {
 		return TokenPayload{}, err
 	}
 
-	if now.Before(payload.Expiration) {
+	now := time.Now()
+	log.Print(now)
+	log.Print(payload.Expiration)
+
+
+	if now.After(payload.Expiration) {
 		return TokenPayload{}, errors.New("token expired")
 	}
 

@@ -17,7 +17,7 @@ import (
 
 func CheckNodePermissionForUser(r *http.Request) bool {
 
-	nodeId, err := getNodeIDFormRequest(r);
+	nodeId, err := getNodeIDFormRequest(r)
 	if err != nil{
 		return false
 	}

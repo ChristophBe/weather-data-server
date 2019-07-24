@@ -3,12 +3,14 @@ package handlers
 import (
 	"../data"
 	"../jwt"
+	"../utils"
+	"encoding/base64"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -20,6 +22,8 @@ type UserDTO struct {
 
 
 func isValidUserDTO(userDTO UserDTO) bool{
+
+	//TODO: fix regex to accept all valid email Addresses.
 	mailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	return len(userDTO.Username) > 4 && len(userDTO.Password) > 4 && mailRegex.MatchString(userDTO.Email)
 }
@@ -44,9 +48,12 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 		return
 	}
 
-	if isValidUserDTO(userDTO){
+
+	//TODO add Input Validation
+	/*if isValidUserDTO(userDTO){
 		handleError(w,invalidBodyError,http.StatusBadRequest)
-	}
+		return
+	}*/
 
 	//Check if User with given Email is Existing
 	user , err := data.FetchUserByEmail(userDTO.Email)
@@ -63,12 +70,24 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 	}
 
 
+	enableHash, enableToken ,err  := generateEnableToken(userDTO.Email)
+
+	if err != nil{
+		handleError(w,invalidBodyError,http.StatusBadRequest)
+		return
+	}
+
+
+	log.Print("enableToken: " + enableToken)
+
 	//Create user object
 	passwordHash,err := bcrypt.GenerateFromPassword([]byte(userDTO.Password),bcrypt.DefaultCost)
-	newUser := data.User{CreationTime:time.Now(), Email:userDTO.Email,Username:userDTO.Username,PasswordHash:passwordHash}
+
+
+	newUser := data.User{CreationTime:time.Now(), Email:userDTO.Email,Username:userDTO.Username,PasswordHash:passwordHash, IsEnabled:false,EnableSecretHash: enableHash}
 
 	//Save user to DB
-	data.CreateUser(newUser)
+	data.UpsertUser(newUser)
 
 	//Read created user From DB
 	user, err = data.FetchUserByEmail(newUser.Email)
@@ -76,87 +95,33 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 	writeJsonResponse(user,w)
 }
 
-//func auth
+func generateEnableToken(identifier string) ([]byte, string, error) {
 
-type authCredentialsDTO struct {
-	 Email string `json:"email"`
-	 Password string `json:"password"`
+	enabledSecret := utils.RandStringRunes(32)
+	enabledSecretHash, err :=  bcrypt.GenerateFromPassword([]byte(enabledSecret),bcrypt.DefaultCost)
+
+	if err != nil {
+		return  []byte(""),"",err
+	}
+	enableToken := base64.StdEncoding.EncodeToString([]byte( identifier + ":" + enabledSecret))
+
+	return enabledSecretHash, enableToken, nil
 }
 
-type authTokenDTO struct {
-	Token string `json:"token"`
-}
 
-
-func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
-	
-	b, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		handleError(w,handlerError{Err:err, ErrorMessage:"Invalid Request Body"},http.StatusBadRequest)
-		return
-	}
-
-
-
-	// Unmarshal
-	var authCredentials authCredentialsDTO
-	err = json.Unmarshal(b, &authCredentials)
-	if err != nil {
-		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Request Body"}, http.StatusBadRequest)
-		return
-	}
-	
-	user, err :=data.FetchUserByEmail(authCredentials.Email)
-	
-	
-	if err != nil || user.Id == 0 {
-		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Credentials"},http.StatusForbidden)
-		return
-	}
-	
-	err = bcrypt.CompareHashAndPassword(user.PasswordHash,[]byte(authCredentials.Password))
-	
+func UsersMe(w http.ResponseWriter, r * http.Request){
+	userId, err :=  jwt.GetUserIdBy(r)
 	if err != nil{
-		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Credentials"},http.StatusForbidden)
+		handleError(w,handlerError{Err: err,ErrorMessage:"not authenticated"}, http.StatusForbidden)
 		return
 	}
 
+	user, err := data.FetchUserById(userId)
 
-
-	tokenString, err := jwt.GenerateToken(user)
-	if err != nil || user.Id == 0 {
-		handleError(w,handlerError{Err:err,ErrorMessage:"Failed to Create Token"},http.StatusBadRequest)
-		return
-	}
-	
-	token := authTokenDTO{Token:tokenString}
-	err = writeJsonResponse(token,w)
-
-	if err != nil || user.Id == 0 {
-		handleError(w,handlerError{Err:err,ErrorMessage:""},http.StatusInternalServerError)
+	if err != nil{
+		handleError(w,handlerError{Err: err,ErrorMessage:"not authenticated"}, http.StatusForbidden)
 		return
 	}
 
-}
-
-
-
-
-
-
-
-func CheckTokenHandler(w http.ResponseWriter,r *http.Request)  {
-	auth := r.Header.Get("Authorization")
-	authHeaderParts := strings.Split(auth," ")
-
-	token := authHeaderParts[1]
-	payload,err:= jwt.Verify(token)
-
-	if err != nil {
-		handleError(w,handlerError{Err:err,ErrorMessage:"invalid Token"}, http.StatusForbidden)
-		return
-	}
-
-	writeJsonResponse(payload,w)
+	writeJsonResponse(user,w)
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ type handlerError struct {
 	Err          error     `json:"-"`
 	ErrorMessage string    `json:"error"`
 	Timestamp    time.Time `json:"timestamp"`
+	status    	 int	   `json:"-"`
 }
 
 func writeJsonResponse( data interface{}, w http.ResponseWriter) error{
@@ -43,4 +45,19 @@ func handleError(w http.ResponseWriter, error handlerError, httpStatus int){
 	http.Error(w, string(jsonObj), httpStatus)
 	w.Header().Set("Content-Type", "application/json")
 	//panic(error.Err)
+}
+
+func readBody(r *http.Request , item interface{}) error {
+
+
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, item)
+	if err != nil {
+		return err
+	}
+	return nil
 }

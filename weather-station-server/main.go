@@ -24,6 +24,10 @@ func main() {
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
 	router.Path("/users").HandlerFunc(handlers.CreateUserHandler).Methods(http.MethodPost)
 	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
+	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
+	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
+
+
 
 	log.Printf("Server started")
 	log.Printf("You can access the Api at http://localhost:8080")
@@ -54,7 +58,12 @@ func corsHandler(handler http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-		handler.ServeHTTP(w,r)
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			handler.ServeHTTP(w,r)
+		}
 	})
 }
 
