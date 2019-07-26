@@ -1,7 +1,6 @@
 package data
 
 import (
-	"../configs"
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"io"
@@ -21,6 +20,8 @@ const(
 	measuringModeQueryString 	 = "id(m), m.name, m.lat, m.lng, m.isPublic, m.isOutdoors"
 	createStationStatement       = "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN " + measuringModeQueryString
 	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN " + measuringModeQueryString
+	fetchAllPublicMeasuringNodesStmt      = "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN " + measuringModeQueryString
+	fetchAllVisibaleMeasuringNodesByUserIdStmt      = "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN " + measuringModeQueryString
 	fetchMeasuringNodesByIdStmt      = "MATCH (m:MeasuringNode) WHERE id(m) = {nodeId} RETURN  "+ measuringModeQueryString
 	fetchMeasuringNodesUserRelations =" MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
 )
@@ -134,13 +135,13 @@ func (m *MeasuringNodeRepository) CreateMeasuringNode(node MeasuringNode, userId
 		resultNode 	 MeasuringNode
 	)
 
-	driver, err = neo4j.NewDriver("bolt://" + configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
+	driver, err = createDriver()
 	if err != nil {
 		return resultNode, err
 	}
 	defer driver.Close()
 
-	session, err = driver.Session(neo4j.AccessModeWrite)
+	session, err = createSession(driver,neo4j.AccessModeWrite)
 	if err != nil {
 		return resultNode, err
 	}
@@ -176,4 +177,104 @@ func (m *MeasuringNodeRepository) CreateMeasuringNode(node MeasuringNode, userId
 	}
 
 	return resultNode, nil
+}
+
+func (m *MeasuringNodeRepository) FetchAllPublicNodes() ([]MeasuringNode, error) {
+	var (
+		err      error
+		driver   neo4j.Driver
+		session  neo4j.Session
+		result   neo4j.Result
+		results	 []MeasuringNode
+	)
+
+	driver, err = createDriver()
+	if err != nil {
+		return results, err
+	}
+	defer driver.Close()
+
+	session, err = createSession(driver,neo4j.AccessModeRead)
+	if err != nil {
+		return results, err
+	}
+	defer session.Close()
+
+
+
+	_, err = session.ReadTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err = transaction.Run(fetchAllPublicMeasuringNodesStmt, map[string]interface{}{})
+
+		if err != nil {
+			return nil, err
+		}
+
+		for ; result.Next(); {
+			node := m.parseMeasuringNodeFromRow(result.Record().Values())
+
+			results = append(results, node)
+
+		}
+		if result.Err() != nil{
+			return nil, result.Err()
+		}
+		return results, nil
+
+	})
+	if err != nil {
+		return results, err
+	}
+
+	return results, nil
+}
+
+func (m *MeasuringNodeRepository) FetchAllVisibleNodesByUserId(userId int64) ([]MeasuringNode, error) {
+	var (
+		err      error
+		driver   neo4j.Driver
+		session  neo4j.Session
+		result   neo4j.Result
+		results	 []MeasuringNode
+	)
+
+	driver, err = createDriver()
+	if err != nil {
+		return results, err
+	}
+	defer driver.Close()
+
+	session, err = createSession(driver,neo4j.AccessModeRead)
+	if err != nil {
+		return results, err
+	}
+	defer session.Close()
+
+
+
+	_, err = session.ReadTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
+		result, err = transaction.Run(fetchAllVisibaleMeasuringNodesByUserIdStmt, map[string]interface{}{
+			"userId": userId,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		for ; result.Next(); {
+			node := m.parseMeasuringNodeFromRow(result.Record().Values())
+
+			results = append(results, node)
+
+		}
+		if result.Err() != nil{
+			return nil, result.Err()
+		}
+		return results, nil
+
+	})
+	if err != nil {
+		return results, err
+	}
+
+	return results, nil
 }

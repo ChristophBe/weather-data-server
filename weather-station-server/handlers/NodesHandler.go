@@ -2,15 +2,33 @@ package handlers
 
 import (
 	"../data"
+	"../jwt"
 	"net/http"
 )
 
 
 func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
-	con := data.CreateConnection()
-	defer con.Close()
 
+	defer recoverHandlerErrors(w)
+
+
+
+
+	userId,err := jwt.GetUserIdBy(r)
+
+	var nodes []data.MeasuringNode
 	nodeRepo := data.MeasuringNodeRepository{}
-	nodes := nodeRepo.FetchAllMeasuringNodes(con)
-	writeJsonResponse(nodes, w)
+
+	if err != nil {
+		//user is not authorized
+		nodes ,err = nodeRepo.FetchAllPublicNodes()
+		panicIfErrorNonNil(err, "can not fetch Nodes",http.StatusInternalServerError)
+
+	} else {
+		nodes ,err = nodeRepo.FetchAllVisibleNodesByUserId(userId)
+		panicIfErrorNonNil(err, "can not fetch Nodes",http.StatusInternalServerError)
+	}
+
+	err = writeJsonResponse(nodes, w)
+	panicIfErrorNonNil(err, "unexpected Error", http.StatusInternalServerError)
 }

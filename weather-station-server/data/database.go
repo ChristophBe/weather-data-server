@@ -3,6 +3,7 @@ package data
 import (
 	"../configs"
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
 // Constants to be used throughout the example
@@ -44,4 +45,25 @@ func handleError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+
+func createDriver()(neo4j.Driver, error){
+
+	driver, err := neo4j.NewDriver("bolt://" + configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
+	if err != nil {
+		return nil, err
+	}
+
+	return driver,err
+
+
+}
+func createSession( driver neo4j.Driver ,mode neo4j.AccessMode)(neo4j.Session, error){
+	session, err := driver.Session(mode)
+	if err != nil {
+		return nil, err
+	}
+
+	return session,err
 }

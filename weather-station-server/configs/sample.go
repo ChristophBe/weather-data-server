@@ -1,0 +1,14 @@
+package configs
+
+/*
+const(
+	NEO4J_HOST =""
+	NEO4J_PASSWORD =""
+
+	MAIL_SERVER = ""
+	MAIL_SERVER_PORT =
+	MAIL_PASSWORD =""
+	MAIL_USERNAME =""
+	MAIL_MAIL_ADDRESS =""
+)
+*/

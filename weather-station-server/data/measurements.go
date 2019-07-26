@@ -8,8 +8,8 @@ import (
 )
 
 const(
-	createMeasurementStatement   = "MATCH (n:MeasuringNode)  WHERE Id(n) = {stationId} CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measuring {timeStamp: {timeStamp}, pressure: {pressure},temperature: {temperature},humidity: {humidity}})"
-	fetchAllMeasuringForNodeStmt = "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN id(m), m.timeStamp, m.temperature, m.humidity, m.pressure"
+	createMeasurementStatement              = "MATCH (n:MeasuringNode)  WHERE Id(n) = {stationId} CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measuring {timeStamp: {timeStamp}, pressure: {pressure},temperature: {temperature},humidity: {humidity}})"
+	fetchAllMeasuringsForNodeStmt           = "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId}  RETURN id(m), m.timeStamp, m.temperature, m.humidity, m.pressure"
 	fetchMeasuringForNodeAfterTimestampStmt = "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} and m.timeStamp > {minTime} RETURN id(m), m.timeStamp, m.temperature, m.humidity, m.pressure ORDER BY m.timeStamp DESC"
 )
 
@@ -50,7 +50,7 @@ func CreateMeasurement( con bolt.Conn, stationId int64, measurement Measuring) {
 
 func FetchAllMeasuringByNodeId(con bolt.Conn, nodeId int64) []Measuring {
 
-	st:= prepareStatement(fetchAllMeasuringForNodeStmt,con)
+	st:= prepareStatement(fetchAllMeasuringsForNodeStmt,con)
 	rows := queryStatement(st,map[string]interface{}{"nodeId":nodeId})
 	//var measurings []Measuring
 	measurings := parseMeasuringFormRows(rows, st)

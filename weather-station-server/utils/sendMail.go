@@ -19,7 +19,7 @@ func SendMail(recipient string, message string) {
 	err := smtp.SendMail(
 		configs.MAIL_SERVER + ":" + configs.MAIL_SERVER_PORT,
 		auth,
-		configs.MAIL_MAIL_ADRESS,
+		configs.MAIL_MAIL_ADDRESS,
 		[]string{recipient},
 		[]byte(message),
 	)
