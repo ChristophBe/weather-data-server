@@ -1,0 +1,94 @@
+body{
+  font-family: 'Archivo Narrow', sans-serif;
+}
+h1, h2, h3, h4{
+  font-family: 'Roboto Slab', serif;
+
+}
+h1, h2{
+  margin-bottom: 50px;
+}
+.App {
+
+  background-color: #282c34;
+  text-align: center;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.main-content{
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+    padding: 30px;
+}
+
+.main-nav {
+  padding: 20px;
+  width: 100%;
+  display: block;
+  align-content: space-between;
+}
+
+.main-nav ul{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+
+
+  align-items: center;
+
+}
+.main-nav nav{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 20px;
+  border-bottom: 1px solid #ffffffaa;
+
+}
+.main-nav ul li{
+  padding: 0;
+  margin: 0 10px;
+}
+.main-nav ul li a.nav-link{
+ color: #ffffff;
+  font-size: 18px;
+}
+.main-nav ul li a.nav-link:hover{
+  text-decoration: none;
+  color: #ffffffaa
+}
+
+.form-control {
+  border-radius: 2rem;
+  padding: 20px 15px;
+  color: #fff;
+}
+
+
+.btn {
+  border-radius: 2rem;
+}
+
+.bottom-nav{
+  width: 100%;
+  padding: 20px;
+}
+
+.bottom-nav nav {
+    border-top: 1px solid #ffffffaa;
+    display: flex;
+    padding:20px 0 0;
+}
+.bottom-nav nav a{
+    margin:0px 10px;
+
+}
