@@ -15,6 +15,13 @@ type EnableTokenDTO struct {
 }
 
 
+func isValidEnableTokenDTO(enableTokenDTO EnableTokenDTO) bool{
+
+
+	return len(enableTokenDTO.Username) > 4 && len(enableTokenDTO.Password) > 4
+}
+
+
 func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 
 	defer recoverHandlerErrors(w)
@@ -38,6 +45,10 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 	err = bcrypt.CompareHashAndPassword(user.EnableSecretHash, []byte(secret))
 	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
+
+	if !isValidEnableTokenDTO(enableUserDTO) {
+		panic(handlerError{Err:err, ErrorMessage:"invalid body or invalid token",Status:http.StatusBadRequest})
+	}
 
 	userNameTest, err := data.FetchUserByUsername(enableUserDTO.Username)
 	if err != nil || userNameTest.Id!= 0 {

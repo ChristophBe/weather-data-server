@@ -9,7 +9,7 @@ import (
 
 const(
 	userReturnString                   = "id(u),u.lastLogin, u.creationTime, u.email, u.username, u.passwordHash, u.isEnabled, u.enableSecretHash"
-	updateUserStatement                = "Match (u:User) WHERE id(u) = {userId} SET u.lastLogin = {lastLogin}, u.isEnabled = {isEnabled},u.enableSecretHash = {enableSecretHash}, u.passwordHash = {passwordHash} RETURN " + userReturnString
+	updateUserStatement                = "Match (u:User) WHERE id(u) = {userId} SET u.lastLogin = {lastLogin}, u.isEnabled = {isEnabled},u.username = {username}, u.passwordHash = {passwordHash} RETURN " + userReturnString
 	insertUserStatement                = "CREATE (u:User {lastLogin: {lastLogin}, creationTime: {creationTime},email: {email},username: {username},isEnabled: {isEnabled},enableSecretHash: {enableSecretHash}, passwordHash: {passwordHash}}) RETURN " + userReturnString
 	fetchUserByUSerIdStatement         = "MATCH (u:User) where id(u)={userId} return " + userReturnString
 	fetchUserByEmailStatement          = "MATCH (u:User) where u.email={email} return " + userReturnString
