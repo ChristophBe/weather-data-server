@@ -1,14 +1,16 @@
 package data
 
 import (
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"io"
+	"log"
 	"time"
 )
 
 const(
 	userReturnString                   = "id(u),u.lastLogin, u.creationTime, u.email, u.username, u.passwordHash, u.isEnabled, u.enableSecretHash"
-	updateUserStatement                = "Match (u:User) WHERE id(u) = {userId} SET u.lastLogin = {lastLogin}, u.isEnabled = {isEnabled},u.enableSecretHash = {enableSecretHash}, u.passwordHash = {passwordHash}"
-	insertUserStatement                = "CREATE (m:User {lastLogin: {lastLogin}, creationTime: {creationTime},email: {email},username: {username},isEnabled: {isEnabled},enableSecretHash: {enableSecretHash}, passwordHash: {passwordHash}})"
+	updateUserStatement                = "Match (u:User) WHERE id(u) = {userId} SET u.lastLogin = {lastLogin}, u.isEnabled = {isEnabled},u.enableSecretHash = {enableSecretHash}, u.passwordHash = {passwordHash} RETURN " + userReturnString
+	insertUserStatement                = "CREATE (u:User {lastLogin: {lastLogin}, creationTime: {creationTime},email: {email},username: {username},isEnabled: {isEnabled},enableSecretHash: {enableSecretHash}, passwordHash: {passwordHash}}) RETURN " + userReturnString
 	fetchUserByUSerIdStatement         = "MATCH (u:User) where id(u)={userId} return " + userReturnString
 	fetchUserByEmailStatement          = "MATCH (u:User) where u.email={email} return " + userReturnString
 	fetchOwnerByMeasuringNodeStatement = "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN " + userReturnString
@@ -27,6 +29,13 @@ type User struct {
 
 }
 
+func userResultHandler(result neo4j.Result) (interface{},error){
+	if result.Next() {
+		user := paresUserFormLine(result.Record().Values())
+		return user, nil
+	}
+	return nil, result.Err()
+}
 
 
 func paresUserFormLine(row []interface{}) User {
@@ -43,15 +52,15 @@ func paresUserFormLine(row []interface{}) User {
 	return user
 }
 
-func UpsertUser( user User) {
+func UpsertUser( user User)(User,error) {
 	if user.Id == 0 {
-		insertUser(user)
+		return insertUser(user)
 	}else {
-		updateUser(user)
+		return updateUser(user)
 	}
 }
 
-func updateUser( user User) {
+/*func updateUser( user User) {
 	con := CreateConnection()
 	defer con.Close()
 
@@ -62,6 +71,7 @@ func updateUser( user User) {
 
 	result, err := st.ExecNeo(map[string]interface{}{
 		"userId":   	user.Id,
+		"username": 	user.Username,
 		"lastLogin":   	user.LastLogin.Unix(),
 		"isEnabled": 	user.IsEnabled,
 		"enableSecretHash": string(user.EnableSecretHash),
@@ -70,9 +80,50 @@ func updateUser( user User) {
 
 	_, err = result.RowsAffected()
 	handleError(err)
+}*/
+
+func updateUser( user User)(insertedUser User,err error){
+	params := map[string]interface{}{
+		"userId":   	user.Id,
+		"username": 	user.Username,
+		"lastLogin":   	user.LastLogin.Unix(),
+		"isEnabled": 	user.IsEnabled,
+		"enableSecretHash": string(user.EnableSecretHash),
+		"passwordHash": string(user.PasswordHash)}
+
+	res, err:= doWriteTransaction(updateUserStatement, params , userResultHandler)
+
+	log.Print(res, err)
+	if err != nil{
+		return User{}, err
+	}
+
+	return res.(User) ,nil
 }
 
-func insertUser( user User) {
+func insertUser( user User) (insertedUser User,err error) {
+	params := map[string]interface{}{
+		"lastLogin":   	user.LastLogin.Unix(),
+		"creationTime":	user.CreationTime.Unix(),
+		"email":    	user.Email,
+		"username": 	user.Username,
+		"isEnabled": 	user.IsEnabled,
+		"enableSecretHash": string(user.EnableSecretHash),
+		"passwordHash": string(user.PasswordHash)}
+
+	res, err:=doWriteTransaction(insertUserStatement, params , userResultHandler)
+
+	log.Print(res, err)
+	if err != nil{
+		return User{}, err
+	}
+
+	return res.(User) ,nil
+}
+/*
+func insertUser( user User) (User,error){
+
+
 	con := CreateConnection()
 	defer con.Close()
 
@@ -94,6 +145,8 @@ func insertUser( user User) {
 	_, err = result.RowsAffected()
 	handleError(err)
 }
+
+ */
 
 func fetchUser(statement string, params map[string]interface{}) (User,error){
 

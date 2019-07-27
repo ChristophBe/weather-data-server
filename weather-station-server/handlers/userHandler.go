@@ -87,10 +87,12 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 	newUser := data.User{CreationTime:time.Now(), Email:userDTO.Email,Username:userDTO.Username,PasswordHash:passwordHash, IsEnabled:false,EnableSecretHash: enableHash}
 
 	//Save user to DB
-	data.UpsertUser(newUser)
+	user, err = data.UpsertUser(newUser)
+	if err != nil{
+		handleError(w,handlerError{Err:err,ErrorMessage:"unexpected error"}, http.StatusInternalServerError)
+		return
+	}
 
-	//Read created user From DB
-	user, err = data.FetchUserByEmail(newUser.Email)
 
 	writeJsonResponse(user,w)
 }

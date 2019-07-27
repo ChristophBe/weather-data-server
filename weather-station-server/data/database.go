@@ -67,3 +67,32 @@ func createSession( driver neo4j.Driver ,mode neo4j.AccessMode)(neo4j.Session, e
 
 	return session,err
 }
+
+func doWriteTransaction(statement string, params map[string]interface{},resultHandler func(result neo4j.Result)(res interface{},err error))(res interface{},err error){
+
+	var (
+		driver   neo4j.Driver
+		session  neo4j.Session
+		result   neo4j.Result
+	)
+
+	driver, err = createDriver()
+	if err != nil {
+		return nil, err
+	}
+	defer driver.Close()
+
+	session, err = createSession(driver,neo4j.AccessModeWrite)
+	if err != nil {
+		return nil,err
+	}
+	defer session.Close()
+
+	return session.WriteTransaction(func(transaction neo4j.Transaction) (res interface{}, err error) {
+		result, err =  transaction.Run(statement,params)
+		if err != nil {
+			return nil,err
+		}
+		return resultHandler(result)
+	})
+}

@@ -4,6 +4,7 @@ import (
 	"../data"
 	"../jwt"
 	"encoding/json"
+	"github.com/johnnadratowski/golang-neo4j-bolt-driver/log"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
@@ -86,6 +87,9 @@ func updateLastLogin(user data.User){
 
 	user.LastLogin = time.Now()
 
-	data.UpsertUser(user)
+	_, err := data.UpsertUser(user)
 
+	if err != nil {
+		log.Error(err)
+	}
 }

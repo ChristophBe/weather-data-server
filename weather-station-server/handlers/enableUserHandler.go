@@ -10,60 +10,66 @@ import (
 
 type EnableTokenDTO struct {
 	Token string `json:"token"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 
-type EnableTokenResp struct {
-	Msg string `json:"message"`
-}
 func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 
 	defer recoverHandlerErrors(w)
 
-	var enableToken EnableTokenDTO
+	var enableUserDTO EnableTokenDTO
 
-	err := readBody(request, &enableToken)
-	if err != nil {
-		panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
-	}
+	err := readBody(request, &enableUserDTO)
+	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
-	email, secret := parseToken(enableToken)
+	email, secret := parseToken(enableUserDTO)
 
 	user, err := data.FetchUserByEmail(email)
-
-	if err != nil {
-		panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
-	}
+	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
 	if user.IsEnabled {
-		err = writeJsonResponse(EnableTokenResp{Msg: "Your Account was enabled successfully"}, w)
-		if err != nil {
-			panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
-		}
+		err = writeJsonResponse(user, w)
+		panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.EnableSecretHash, []byte(secret))
+	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
-	if err != nil {
-		panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
+
+	userNameTest, err := data.FetchUserByUsername(enableUserDTO.Username)
+	if err != nil || userNameTest.Id!= 0 {
+		panic(handlerError{Err:err, ErrorMessage:"invalid body or invalid token",Status:http.StatusBadRequest})
 	}
 
-	enableUser(user)
 
-	err = writeJsonResponse(EnableTokenResp{Msg: "Your Account was enabled successfully"}, w)
-	if err != nil {
-		panic(handlerError{Err: err, ErrorMessage: "invalid body or invalid token"})
-	}
+	user.EnableSecretHash = []byte("")
+	user.IsEnabled = true
+	user.Username = enableUserDTO.Username
+
+	
+	passwordHash,err := bcrypt.GenerateFromPassword([]byte(enableUserDTO.Password),bcrypt.DefaultCost)
+	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
+	user.PasswordHash = passwordHash
+	
+	
+	user,err = data.UpsertUser(user)
+	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
+
+	err = writeJsonResponse(user, w)
+	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
+
 
 }
 
 
 
-func enableUser(user data.User) {
+func enableUser(user data.User)(data.User,error) {
 	user.IsEnabled = true
 	user.EnableSecretHash = []byte("")
-	data.UpsertUser(user)
+	return data.UpsertUser(user)
 }
 
 func parseToken(enableToken EnableTokenDTO) (string, string) {

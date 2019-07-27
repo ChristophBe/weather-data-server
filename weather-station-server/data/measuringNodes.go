@@ -23,7 +23,8 @@ const(
 	fetchAllPublicMeasuringNodesStmt      = "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN " + measuringModeQueryString
 	fetchAllVisibaleMeasuringNodesByUserIdStmt      = "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN " + measuringModeQueryString
 	fetchMeasuringNodesByIdStmt      = "MATCH (m:MeasuringNode) WHERE id(m) = {nodeId} RETURN  "+ measuringModeQueryString
-	fetchMeasuringNodesUserRelations =" MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
+	fetchMeasuringNodesUserRelations = "MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
+	createAuthorisationRelation = "MATCH (u:User), (n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} CREATE (u)-[r:IS_AUTHORIZED]->(n) RETURN r"
 )
 
 
@@ -277,4 +278,16 @@ func (m *MeasuringNodeRepository) FetchAllVisibleNodesByUserId(userId int64) ([]
 	}
 
 	return results, nil
+}
+
+func (m *MeasuringNodeRepository) CreateAuthorisationRelation(node MeasuringNode, user User) (err error){
+	params := map[string]interface{}{
+		"nodeId": node.Id,
+		"userId": user.Id,
+	}
+
+	_,err = doWriteTransaction(createAuthorisationRelation,params, func(result neo4j.Result) (res interface{}, err error) {
+		return nil, result.Err()
+	})
+	return
 }
