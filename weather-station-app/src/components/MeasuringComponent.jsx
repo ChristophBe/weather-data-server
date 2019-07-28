@@ -3,6 +3,8 @@ import moment from "moment";
 import MeasurementsActions from "../redux/actions/MeasurementsActions";
 import {connect} from "react-redux";
 import NodesActions from "../redux/actions/NodesActions";
+import {Link} from "react-router-dom";
+import {Fragment} from "react";
 
 class MeasuringComponent extends React.Component {
 
@@ -10,7 +12,6 @@ class MeasuringComponent extends React.Component {
         super(props);
         this.state = {
             reloadInterval:false};
-
     }
 
    componentDidUpdate(prevProps, prevState, snapshot) {
@@ -28,6 +29,7 @@ class MeasuringComponent extends React.Component {
         let reloadInterval = setInterval(this.props.fetch,1000*60*2);
         this.setState({reloadInterval:reloadInterval})
     }
+
     componentWillUnmount(){
         if(this.state.reloadInterval){
             clearInterval(this.state.reloadInterval);
@@ -40,12 +42,11 @@ class MeasuringComponent extends React.Component {
         console.log("props a" , this.props);
 
 
-        const {node,measurements} = this.props;
+        const {node,measurements, isOwnNode, nodeId} = this.props;
 
         if(measurements == null){
             return <h1>Messwerte werden geladen.</h1>
         }
-
 
         const{items, isLoading} = measurements;
 
@@ -54,7 +55,10 @@ class MeasuringComponent extends React.Component {
         }
 
         if(items.length <= 0){
-            return  <h1>Es gibt leider keine akutellen Messwerte.</h1>
+            return <Fragment>
+                <h1>Es gibt leider keine akutellen Messwerte.</h1>
+                { node != null &&!node.is_public && isOwnNode ? <div><Link className={"btn btn-outline-light"} to={"/node/" + nodeId + "/share"}>Freigeben</Link></div>: null}
+            </Fragment>
         }
         const lastMeasurement = items[0];
 
@@ -72,6 +76,7 @@ class MeasuringComponent extends React.Component {
                     <p>Luftdruck: <b>{pressure}hPa</b></p>
                     <p>Messzeitpunkt: <b>{time.format("DD.MM.YYYY HH:mm")} Uhr</b></p>
                 </div>
+                {!node.isPublic && isOwnNode ? <div><Link className={"btn btn-outline-light"} to={"/node/" + nodeId + "/share"}>Freigeben</Link></div>: null}
             </div>
         );
     }
@@ -81,6 +86,9 @@ class MeasuringComponent extends React.Component {
 
 const mapStateToProps = (state, ownProps) => ({
     node: state.nodes.map[ownProps.nodeId],
+    isOwnNode: state.nodes.ownNodes.reduce(
+        (accumulator, item) => { return accumulator || item.id === ownProps.nodeId}, false
+    ),
     measurements: state.measurements[ownProps.nodeId],
 });
 

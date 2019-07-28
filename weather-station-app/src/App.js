@@ -58,14 +58,15 @@ class App extends Component {
                     <Fragment>
                         <HeaderNav/>
                         <section className="main-content">
-
-                            <Switch>
-                                <Route path="/users/login" component={LoginComponent}/>
-                                <Route path="/users/create/:token" render={({match}) => <CreateUserView token={match.params.token}/>}/>
-                                <Route path="/node/:nodeId/share" render={({match}) => <ShareNodeView nodeId={Number(match.params.nodeId)}/>}/>
-                                <Route path="/node/:nodeId" render={({match}) => <MeasuringComponent nodeId={Number(match.params.nodeId)}/>}/>
-                                <Redirect from={"/"} to={"/node/" + nodes.selectedNode}/>
-                            </Switch>
+                            <div className={"container"}>
+                                <Switch>
+                                    <Route path="/users/login" component={LoginComponent}/>
+                                    <Route path="/users/create/:token" render={({match}) => <CreateUserView token={match.params.token}/>}/>
+                                    <Route path="/node/:nodeId/share" render={({match}) => <ShareNodeView nodeId={Number(match.params.nodeId)}/>}/>
+                                    <Route path="/node/:nodeId" render={({match}) => <MeasuringComponent nodeId={Number(match.params.nodeId)}/>}/>
+                                    <Redirect from={"/"} to={"/node/" + nodes.selectedNode}/>
+                                </Switch>
+                            </div>
                         </section>
                         {Object.keys(nodes.map).length > 1
                             ? <div className={"bottom-nav"}>
