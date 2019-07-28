@@ -42,7 +42,7 @@ func (MeasuringNodeRepository) parseMeasuringNodeFromRow(row []interface{}) Meas
 }
 
 func (m *MeasuringNodeRepository) handleMeasuringNodeListResultHandler(result neo4j.Result)(interface{},error){
-	results := make([]MeasuringNode,1)
+	results := make([]MeasuringNode,0)
 	for ; result.Next(); {
 		node := m.parseMeasuringNodeFromRow(result.Record().Values())
 
