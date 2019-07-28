@@ -21,7 +21,7 @@ type shareMailParams struct {
 	IsNewUser bool
 }
 
-func ShareNodeHandeler(w http.ResponseWriter, request *http.Request) {
+func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 
 
 	defer recoverHandlerErrors(w)
@@ -62,7 +62,7 @@ func ShareNodeHandeler(w http.ResponseWriter, request *http.Request) {
 		enableHash, enableToken ,err  := generateEnableToken(shareNodeDTO.Email)
 		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
-		emailParams.ActivationLink = configs.FRONTEND_BASE_URL + "/users/create/?enableToken=" + enableToken
+		emailParams.ActivationLink = configs.FRONTEND_BASE_URL + "/users/create/" + enableToken
 
 		user.Email = shareNodeDTO.Email
 		user.IsEnabled = false
@@ -80,6 +80,12 @@ func ShareNodeHandeler(w http.ResponseWriter, request *http.Request) {
 
 	go sendShareMail(user.Email, emailParams)
 
+	respones := struct {
+		Msg string `json:"message"`
+	}{Msg:"the node was successfully shared"}
+
+	err = writeJsonResponse(respones,w)
+	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 }
 
 func sendShareMail( recipient string, params shareMailParams)  {

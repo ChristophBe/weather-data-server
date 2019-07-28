@@ -1,5 +1,5 @@
 import {
-    NODES_FETCH,NODES_RECEIVE,NODES_REQUEST_FAILED,NODES_SELECT
+    NODES_FETCH, NODES_OWN_NODES_RECEIVE, NODES_RECEIVE, NODES_REQUEST_FAILED, NODES_SELECT
 } from "./ActionTypes";
 
 export default class NodesActions {
@@ -10,6 +10,11 @@ export default class NodesActions {
 
     static receiveNodes = (nodes) => ({
         type: NODES_RECEIVE,
+        nodes
+    });
+
+    static receiveOwnNodes = (nodes) => ({
+        type: NODES_OWN_NODES_RECEIVE,
         nodes
     });
 

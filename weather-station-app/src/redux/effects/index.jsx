@@ -3,9 +3,9 @@ import {fetchAuthTokenEffect, fetchUserEffect, logoutAuthCookieEffect, tryCookie
 import {takeEvery, takeLatest} from 'redux-saga/effects'
 import {
     AUTH_DO_LOGIN, AUTH_DO_LOGOUT,
-    AUTH_LOGIN_SUCCESS, AUTH_TRY_COOKIE_AUTH, MEASUREMENTS_FETCH, NODES_FETCH,
+    AUTH_LOGIN_SUCCESS, AUTH_RECEIVE_USER, AUTH_TRY_COOKIE_AUTH, MEASUREMENTS_FETCH, NODES_FETCH,
 } from "../actions/ActionTypes";
-import {fetchNodes} from "./NodesEffects";
+import {fetchNodes, fetchOwnNodes} from "./NodesEffects";
 import {fetchMeasurements} from "./MeasurementsEffects";
 
 export function* rootSaga(){
@@ -19,6 +19,7 @@ export function* rootSaga(){
     yield takeEvery(AUTH_LOGIN_SUCCESS, fetchNodes);
 
     yield takeEvery(NODES_FETCH, fetchNodes);
+    yield takeEvery(AUTH_RECEIVE_USER, fetchOwnNodes);
 
     yield takeEvery(MEASUREMENTS_FETCH, fetchMeasurements);
 

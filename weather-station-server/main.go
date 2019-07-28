@@ -25,12 +25,12 @@ func main() {
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/share").HandlerFunc(handlers.ShareNodeHandeler).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/share").HandlerFunc(handlers.ShareNodeHandler).Methods(http.MethodPost)
 	router.Path("/users").HandlerFunc(handlers.CreateUserHandler).Methods(http.MethodPost)
 	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
 	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
 	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
-	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
+	router.Path("/users/{userId}/nodes").HandlerFunc(handlers. 	FetchNodesByOwnerHandler).Methods(http.MethodGet)
 
 
 

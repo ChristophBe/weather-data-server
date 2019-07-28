@@ -14,7 +14,7 @@ class MeasuringComponent extends React.Component {
     }
 
    componentDidUpdate(prevProps, prevState, snapshot) {
-        console.log("props test", this.props)
+        console.log("props test", this.props);
         if(prevProps.nodeId !== this.props.nodeId){
 
             this.props.fetch();

@@ -1,5 +1,5 @@
 import {
-    NODES_FETCH,NODES_RECEIVE,NODES_REQUEST_FAILED,NODES_SELECT
+    NODES_FETCH, NODES_OWN_NODES_RECEIVE, NODES_RECEIVE, NODES_REQUEST_FAILED, NODES_SELECT
 } from "../actions/ActionTypes";
 
 
@@ -19,6 +19,7 @@ const INITIAL_AUTHENTICATION_STATE = {
     isFailed: false,
     isLoading: false,
     map: {},
+    ownNodes:[],
     selectedNode: null,
 };
 
@@ -46,6 +47,10 @@ const NodesReducer = (state = INITIAL_AUTHENTICATION_STATE, action) => {
         case NODES_SELECT:
             return Object.assign({},state,{
                 selectedNode: action.nodeId
+            });
+        case NODES_OWN_NODES_RECEIVE:
+            return Object.assign({},state,{
+                ownNodes: action.nodes
             });
         default:
             return state

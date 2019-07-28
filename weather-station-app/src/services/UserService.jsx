@@ -9,4 +9,7 @@ export class UserService {
     }
 
 
+    static createUser(payload) {
+        return RequestService.doPost(Config.apiBaseUrl + "/users/enable" , payload,true,{});
+    }
 }
