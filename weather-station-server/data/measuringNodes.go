@@ -1,10 +1,7 @@
 package data
 
 import (
-	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"io"
-	"log"
 )
 
 type MeasuringNode struct {
@@ -17,101 +14,19 @@ type MeasuringNode struct {
 }
 
 const(
-	measuringModeQueryString 	 = "id(m), m.name, m.lat, m.lng, m.isPublic, m.isOutdoors"
-	createStationStatement       = "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN " + measuringModeQueryString
-	fetchMeasuringNodesStmt      = "MATCH (m:MeasuringNode) RETURN " + measuringModeQueryString
-	fetchAllPublicMeasuringNodesStmt      = "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN " + measuringModeQueryString
-	fetchAllVisibaleMeasuringNodesByUserIdStmt      = "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN " + measuringModeQueryString
-	fetchMeasuringNodesByIdStmt      = "MATCH (m:MeasuringNode) WHERE id(m) = {nodeId} RETURN  "+ measuringModeQueryString
-	fetchMeasuringNodesUserRelations = "MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} return type(r)"
-	createAuthorisationRelation = "MATCH (u:User), (n:MeasuringNode) WHERE id(u) = {userId} and id(n) = {nodeId} CREATE (u)-[r:IS_AUTHORIZED]->(n) RETURN r"
+	measuringModeQueryString                  = "id(m), m.name, m.lat, m.lng, m.isPublic, m.isOutdoors"
+	createStationStatement                    = "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN " + measuringModeQueryString
+	fetchMeasuringNodesStmt                   = "MATCH (m:MeasuringNode) RETURN " + measuringModeQueryString
+	fetchAllPublicMeasuringNodesStmt          = "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN " + measuringModeQueryString
+	fetchAllVisibleMeasuringNodesByUserIdStmt = "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN " + measuringModeQueryString
+	fetchAllOwnedMeasuringNodesByUserIdStmt   = "MATCH (m:MeasuringNode)<-[:OWNER]-(u:User) WITH m, u WHERE id(u) = $userId RETURN " + measuringModeQueryString
+	fetchMeasuringNodesByIdStmt               = "MATCH (m:MeasuringNode) WHERE id(m) = $nodeId RETURN  "+ measuringModeQueryString
+	fetchMeasuringNodesUserRelations          = "MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId return type(r)"
+	createAuthorisationRelation 			  = "MATCH (u:User), (n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId CREATE (u)-[r:IS_AUTHORIZED]->(n) RETURN r"
 )
 
 
-type MeasuringNodeRepository struct {
-
-}
-func (m *MeasuringNodeRepository) FetchAllMeasuringNodeById(nodeId int64 ) (MeasuringNode,error) {
-
-	con := CreateConnection()
-	defer con.Close()
-
-	st:= prepareStatement(fetchMeasuringNodesByIdStmt,con)
-	defer st.Close()
-
-
-	rows := queryStatement(st,map[string]interface{}{"nodeId": nodeId})
-
-	var measuringNode MeasuringNode
-
-	row, _, err := rows.NextNeo()
-	if err != nil && err != io.EOF {
-		return measuringNode, err
-
-	} else if err != io.EOF {
-		measuringNode = m.parseMeasuringNodeFromRow(row)
-	}
-	return measuringNode, nil
-}
-
-
-func (MeasuringNodeRepository) FetchAllMeasuringNodeUserRelations(nodeId int64 , userId int64) []string {
-
-	con := CreateConnection()
-	defer con.Close()
-
-	st:= prepareStatement(fetchMeasuringNodesUserRelations,con)
-	defer st.Close()
-
-	rows := queryStatement(st , map[string]interface{}{
-		"userId": userId,
-		"nodeId": nodeId,
-	})
-	var relations []string
-	var err error
-	err = nil
-
-	for err == nil {
-		var row []interface{}
-		row, _, err = rows.NextNeo()
-		if err != nil && err != io.EOF {
-			panic(err)
-		} else if err != io.EOF {
-			relation := row[0].(string)
-			relations = append(relations,relation)
-		}
-	}
-	st.Close()
-
-	return relations
-}
-
-
-
-func (m *MeasuringNodeRepository) FetchAllMeasuringNodes(con bolt.Conn) []MeasuringNode {
-
-	st:= prepareStatement(fetchMeasuringNodesStmt,con)
-	rows := queryStatement(st ,nil)
-	var nodes []MeasuringNode
-	var err error
-	err = nil
-
-	for err == nil {
-		var row []interface{}
-		row, _, err = rows.NextNeo()
-		if err != nil && err != io.EOF {
-			panic(err)
-		} else if err != io.EOF {
-			node := m.parseMeasuringNodeFromRow(row)
-			nodes = append(nodes,node)
-		}
-	}
-
-
-	st.Close()
-
-	return nodes
-}
+type MeasuringNodeRepository struct {}
 
 
 func (MeasuringNodeRepository) parseMeasuringNodeFromRow(row []interface{}) MeasuringNode {
@@ -126,30 +41,79 @@ func (MeasuringNodeRepository) parseMeasuringNodeFromRow(row []interface{}) Meas
 	return node
 }
 
+func (m *MeasuringNodeRepository) handleMeasuringNodeListResultHandler(result neo4j.Result)(interface{},error){
+	results := make([]MeasuringNode,1)
+	for ; result.Next(); {
+		node := m.parseMeasuringNodeFromRow(result.Record().Values())
+
+		results = append(results, node)
+	}
+	if result.Err() != nil{
+		return nil, result.Err()
+	}
+	return results, nil
+}
+
+func (m *MeasuringNodeRepository) handleMeasuringNodeResultHandler(result neo4j.Result)(interface{},error){
+	if result.Next() {
+		node := m.parseMeasuringNodeFromRow(result.Record().Values())
+		return node, nil
+	}
+	return nil, result.Err()
+}
+
+func (m *MeasuringNodeRepository) FetchMeasuringNodeById(nodeId int64 ) (MeasuringNode,error) {
+	params := map[string]interface{}{"nodeId": nodeId}
+
+	result, err := doReadTransaction(fetchMeasuringNodesByIdStmt,params,m.handleMeasuringNodeResultHandler)
+
+	if err != nil {
+		return MeasuringNode{},err
+	}
+	return result.(MeasuringNode),nil
+}
+
+
+func (MeasuringNodeRepository) FetchAllMeasuringNodeUserRelations(nodeId int64 , userId int64) ([]string ,error){
+	params := map[string]interface{}{
+		"userId": userId,
+		"nodeId": nodeId,
+	}
+
+	result, err := doReadTransaction(fetchMeasuringNodesUserRelations,params, func(result neo4j.Result) (res interface{}, err error) {
+		var relations []string
+
+		if result.Err() != nil{
+			return relations, result.Err()
+		}
+		for ; result.Next() ; {
+			relation := result.Record().GetByIndex(0).(string)
+			relations = append(relations,relation)
+		}
+		return relations, nil
+	})
+
+	if err != nil {
+		return make([]string, 0),err
+	}
+	return result.([]string),nil
+}
+
+
+
+func (m *MeasuringNodeRepository) FetchAllMeasuringNodes() ([]MeasuringNode,error) {
+	params := map[string]interface{}{}
+
+	results, err := doReadTransaction(fetchMeasuringNodesStmt, params,m.handleMeasuringNodeListResultHandler)
+
+	if err != nil{
+		return []MeasuringNode{}, err
+	}
+	return results.([]MeasuringNode),nil
+}
+
 
 func (m *MeasuringNodeRepository) CreateMeasuringNode(node MeasuringNode, userId int64) (MeasuringNode, error) {
-	var (
-		err      error
-		driver   neo4j.Driver
-		session  neo4j.Session
-		result   neo4j.Result
-		resultNode 	 MeasuringNode
-	)
-
-	driver, err = createDriver()
-	if err != nil {
-		return resultNode, err
-	}
-	defer driver.Close()
-
-	session, err = createSession(driver,neo4j.AccessModeWrite)
-	if err != nil {
-		return resultNode, err
-	}
-	defer session.Close()
-
-	log.Print(node)
-
 	params := map[string]interface{}{
 		"name": node.Name,
 		"lat":  node.Lat,
@@ -159,125 +123,49 @@ func (m *MeasuringNodeRepository) CreateMeasuringNode(node MeasuringNode, userId
 		"ownerId": userId,
 	}
 
-	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		result, err = transaction.Run( createStationStatement, params)
+	result, err := doWriteTransaction(createStationStatement,params, m.handleMeasuringNodeResultHandler)
 
-		if err != nil {
-			return nil, err
-		}
-
-		if result.Next() {
-			resultNode = m.parseMeasuringNodeFromRow(result.Record().Values())
-			return resultNode, nil
-		}
-
-		return nil, result.Err()
-	})
 	if err != nil {
-		return resultNode, err
+		return MeasuringNode{},err
+	}
+	return result.(MeasuringNode), nil
+}
+
+func (m *MeasuringNodeRepository) FetchNodesOwnedByUserId(userId int64) ([]MeasuringNode, error) {
+
+	params := map[string]interface{}{
+		"userId": userId,
 	}
 
-	return resultNode, nil
+	results, err := doReadTransaction(fetchAllOwnedMeasuringNodesByUserIdStmt, params, m.handleMeasuringNodeListResultHandler)
+	if err != nil{
+		return []MeasuringNode{}, err
+	}
+	return results.([]MeasuringNode),nil
 }
 
 func (m *MeasuringNodeRepository) FetchAllPublicNodes() ([]MeasuringNode, error) {
-	var (
-		err      error
-		driver   neo4j.Driver
-		session  neo4j.Session
-		result   neo4j.Result
-		results	 []MeasuringNode
-	)
 
-	driver, err = createDriver()
-	if err != nil {
-		return results, err
+	params := map[string]interface{}{}
+
+	results, err := doReadTransaction(fetchAllPublicMeasuringNodesStmt, params, m.handleMeasuringNodeListResultHandler)
+	if err != nil{
+		return []MeasuringNode{}, err
 	}
-	defer driver.Close()
-
-	session, err = createSession(driver,neo4j.AccessModeRead)
-	if err != nil {
-		return results, err
-	}
-	defer session.Close()
-
-
-
-	_, err = session.ReadTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		result, err = transaction.Run(fetchAllPublicMeasuringNodesStmt, map[string]interface{}{})
-
-		if err != nil {
-			return nil, err
-		}
-
-		for ; result.Next(); {
-			node := m.parseMeasuringNodeFromRow(result.Record().Values())
-
-			results = append(results, node)
-
-		}
-		if result.Err() != nil{
-			return nil, result.Err()
-		}
-		return results, nil
-
-	})
-	if err != nil {
-		return results, err
-	}
-
-	return results, nil
+	return results.([]MeasuringNode),nil
 }
 
 func (m *MeasuringNodeRepository) FetchAllVisibleNodesByUserId(userId int64) ([]MeasuringNode, error) {
-	var (
-		err      error
-		driver   neo4j.Driver
-		session  neo4j.Session
-		result   neo4j.Result
-		results	 []MeasuringNode
-	)
 
-	driver, err = createDriver()
-	if err != nil {
-		return results, err
-	}
-	defer driver.Close()
-
-	session, err = createSession(driver,neo4j.AccessModeRead)
-	if err != nil {
-		return results, err
-	}
-	defer session.Close()
-
-
-
-	_, err = session.ReadTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		result, err = transaction.Run(fetchAllVisibaleMeasuringNodesByUserIdStmt, map[string]interface{}{
-			"userId": userId,
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		for ; result.Next(); {
-			node := m.parseMeasuringNodeFromRow(result.Record().Values())
-
-			results = append(results, node)
-
-		}
-		if result.Err() != nil{
-			return nil, result.Err()
-		}
-		return results, nil
-
-	})
-	if err != nil {
-		return results, err
+	params := map[string]interface{}{
+		"userId": userId,
 	}
 
-	return results, nil
+	results, err := doReadTransaction(fetchAllVisibleMeasuringNodesByUserIdStmt, params, m.handleMeasuringNodeListResultHandler)
+	if err != nil{
+		return []MeasuringNode{}, err
+	}
+	return results.([]MeasuringNode),nil
 }
 
 func (m *MeasuringNodeRepository) CreateAuthorisationRelation(node MeasuringNode, user User) (err error){

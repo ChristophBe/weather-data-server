@@ -43,7 +43,7 @@ func ShareNodeHandeler(w http.ResponseWriter, request *http.Request) {
 
 
 	nodeRepo := data.MeasuringNodeRepository{}
-	node, err := nodeRepo.FetchAllMeasuringNodeById(nodeId)
+	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
 	user, err := data.FetchUserByEmail(shareNodeDTO.Email)

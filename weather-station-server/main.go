@@ -30,6 +30,7 @@ func main() {
 	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
 	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
 	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
+	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
 
 
 
