@@ -57,7 +57,6 @@ class MeasuringComponent extends React.Component {
         if(items.length <= 0){
             return <Fragment>
                 <h1>Es gibt leider keine akutellen Messwerte.</h1>
-                { node != null &&!node.is_public && isOwnNode ? <div><Link className={"btn btn-outline-light"} to={"/node/" + nodeId + "/share"}>Freigeben</Link></div>: null}
             </Fragment>
         }
         const lastMeasurement = items[0];
@@ -76,7 +75,7 @@ class MeasuringComponent extends React.Component {
                     <p>Luftdruck: <b>{pressure}hPa</b></p>
                     <p>Messzeitpunkt: <b>{time.format("DD.MM.YYYY HH:mm")} Uhr</b></p>
                 </div>
-                {!node.isPublic && isOwnNode ? <div><Link className={"btn btn-outline-light"} to={"/node/" + nodeId + "/share"}>Freigeben</Link></div>: null}
+                {!node.is_public && isOwnNode ? <div><Link className={"btn btn-outline-light"} to={"/node/" + nodeId + "/share"}>Freigeben</Link></div>: null}
             </div>
         );
     }

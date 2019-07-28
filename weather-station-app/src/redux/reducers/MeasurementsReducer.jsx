@@ -16,8 +16,8 @@ const MeasurementReducer = (state = INITIAL_MEASUREMENT_STATE, action) => {
 
         case MEASUREMENTS_FETCH:
             return Object.assign({},state,{
-                isFailed: true,
-                isLoading: false,
+                isFailed: false,
+                isLoading: true,
             });
         case MEASUREMENTS_RECEIVE:
             return Object.assign({},state,{
@@ -27,8 +27,8 @@ const MeasurementReducer = (state = INITIAL_MEASUREMENT_STATE, action) => {
             });
         case MEASUREMENTS_REQUEST_FAILED:
             return Object.assign({},state,{
-                isFailed: false,
-                isLoading: true,
+                isFailed: true,
+                isLoading: false,
             });
 
         default:
