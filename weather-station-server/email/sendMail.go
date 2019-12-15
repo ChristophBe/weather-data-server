@@ -3,7 +3,7 @@ package email
 import (
 	"bytes"
 	"crypto/tls"
-	"de.christophb.wetter/configs"
+	"de.christophb.wetter/config"
 	"fmt"
 	"html/template"
 	"net"
@@ -52,7 +52,14 @@ func SendHtmlMail(recipient string,subj string,templateFileName string,themePara
 
 func SendMail(recipient string, subj string, msg string)  error{
 
-	from := mail.Address{"Wetter | christophb.de", configs.MAIL_MAIL_ADDRESS}
+	conf ,err := config.GetConfigManager().GetConfig()
+
+	if err != nil{
+		return err
+	}
+
+	mailConf := conf.Mail
+	from := mail.Address{"Wetter | christophb.de", mailConf.MailAddress}
 	to   := mail.Address{"", recipient}
 
 
@@ -73,11 +80,11 @@ func SendMail(recipient string, subj string, msg string)  error{
 	message += "\r\n" + msg
 
 	// Connect to the SMTP Server
-	servername := configs.MAIL_SERVER + ":" + configs.MAIL_SERVER_PORT
+	servername := fmt.Sprintf("%s:%d",mailConf.Server,mailConf.ServerPort)
 
 	host, _, _ := net.SplitHostPort(servername)
 
-	auth := smtp.PlainAuth("",configs.MAIL_USERNAME, configs.MAIL_PASSWORD, configs.MAIL_SERVER)
+	auth := smtp.PlainAuth("", mailConf.Username, mailConf.Password, mailConf.Server)
 
 	// TLS config
 	tlsconfig := &tls.Config {

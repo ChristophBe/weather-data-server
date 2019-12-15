@@ -1,0 +1,16 @@
+{
+  "neo4j": {
+    "host": "",
+    "username": "",
+    "password": ""
+  },
+  "mail": {
+    "server": "",
+    "server_port": 0,
+    "username": "",
+    "password": "",
+    "mail_address": ""
+  },
+  "frontend_base_url": ""
+}
+

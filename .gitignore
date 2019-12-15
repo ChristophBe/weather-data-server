@@ -1,3 +1,4 @@
 /neo4j**
-/weather-station-server/configs/config**.go
+/weather-station-server/config**.json
+!/weather-station-server/config_sample.json
 **/.idea

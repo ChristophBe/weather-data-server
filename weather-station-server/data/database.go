@@ -1,7 +1,7 @@
 package data
 
 import (
-	"de.christophb.wetter/configs"
+	"de.christophb.wetter/config"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pkg/errors"
 	"log"
@@ -9,7 +9,12 @@ import (
 
 func createDriver() (driver neo4j.Driver, err error) {
 
-	driver, err = neo4j.NewDriver(configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
+	configuration ,err:= config.GetConfigManager().GetConfig()
+	if err != nil{
+		return
+	}
+
+	driver, err = neo4j.NewDriver(configuration.Neo4j.Host, neo4j.BasicAuth(configuration.Neo4j.Username, configuration.Neo4j.Password, ""))
 	return
 
 }

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"de.christophb.wetter/config"
 	"de.christophb.wetter/handlers"
+	"flag"
 	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
@@ -10,6 +12,13 @@ import (
 )
 
 func main() {
+
+
+
+	configFilePtr := flag.String("config","config.json","Path to the Config File")
+	flag.Parse()
+
+	initializeConfiguration(configFilePtr)
 
 	log.Printf("Init Server")
 	router := mux.NewRouter()
@@ -61,4 +70,18 @@ func corsHandler(handler http.Handler) http.Handler {
 			handler.ServeHTTP(w, r)
 		}
 	})
+}
+
+
+func initializeConfiguration(configFilePtr *string) *config.Configuration {
+	configManager := config.GetConfigManager()
+	err := configManager.LoadConfig(*configFilePtr)
+	if err != nil {
+		log.Fatal("Can not load configuration File", err)
+	}
+	conf, err := configManager.GetConfig()
+	if err != nil {
+		log.Fatal("Failed to Read Config.", err)
+	}
+	return conf
 }

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"de.christophb.wetter/configs"
+	"de.christophb.wetter/config"
 	"de.christophb.wetter/data"
 	"de.christophb.wetter/email"
 	"de.christophb.wetter/jwt"
@@ -22,6 +22,7 @@ type shareMailParams struct {
 }
 
 func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
+
 
 
 	defer recoverHandlerErrors(w)
@@ -51,18 +52,22 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 
 	isNewUser := user.Id == 0
 
+
+	conf, err := config.GetConfigManager().GetConfig()
+	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+
 	emailParams := shareMailParams{
-		Username: owner.Username,
-		NodeName: node.Name,
+		Username:  owner.Username,
+		NodeName:  node.Name,
 		IsNewUser: isNewUser,
-		NodeUrl: configs.FRONTEND_BASE_URL + "/nodes/" +  strconv.Itoa(int(nodeId)),
+		NodeUrl:   conf.FrontendBaseUrl + "/nodes/" +  strconv.Itoa(int(nodeId)),
 	}
 
 	if isNewUser {
 		enableHash, enableToken ,err  := generateEnableToken(shareNodeDTO.Email)
 		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
-		emailParams.ActivationLink = configs.FRONTEND_BASE_URL + "/users/create/" + enableToken
+		emailParams.ActivationLink = conf.FrontendBaseUrl + "/users/create/" + enableToken
 
 		user.Email = shareNodeDTO.Email
 		user.IsEnabled = false
