@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"../data"
-	"../jwt"
+	"de.christophb.wetter/data"
+	"de.christophb.wetter/jwt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -16,7 +16,7 @@ func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
 	userId,err := jwt.GetUserIdBy(r)
 
 	var nodes []data.MeasuringNode
-	nodeRepo := data.MeasuringNodeRepository{}
+	nodeRepo := data.GetMeasuringNodeRepository()
 
 	if err != nil {
 		//user is not authorized
@@ -49,7 +49,7 @@ func FetchNodesByOwnerHandler(w http.ResponseWriter , r * http.Request){
 	}
 
 	var nodes []data.MeasuringNode
-	nodeRepo := data.MeasuringNodeRepository{}
+	nodeRepo :=data.GetMeasuringNodeRepository()
 
 
 	nodes ,err = nodeRepo.FetchNodesOwnedByUserId(userId)

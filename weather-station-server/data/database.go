@@ -1,79 +1,33 @@
 package data
 
 import (
-	"../configs"
-	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
+	"de.christophb.wetter/configs"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/pkg/errors"
+	"log"
 )
 
-// Constants to be used throughout the example
-const (
-	URI = "bolt://neo4j:" + configs.NEO4J_PASSWORD + "@" + configs.NEO4J_HOST
-)
+func createDriver() (driver neo4j.Driver, err error) {
 
-
-func CreateConnection() bolt.Conn {
-	driver := bolt.NewDriver()
-	con, err := driver.OpenNeo(URI)
-	handleError(err)
-	return con
-}
-
-// Here we prepare a new statement. This gives us the flexibility to
-// cancel that statement without any request sent to Neo
-func prepareStatement(query string, con bolt.Conn) bolt.Stmt {
-	st, err := con.PrepareNeo(query)
-	handleError(err)
-	return st
-}
-
-
-
-
-func queryStatement(st bolt.Stmt,params map[string]interface{}) bolt.Rows {
-	// Even once I get the rows, if I do not consume them and close the
-	// rows, Neo will discard and not send the data
-	rows, err := st.QueryNeo(params)
-	handleError(err)
-	return rows
-}
-
-
-
-// Here we create a simple function that will take care of errors, helping with some code clean up
-func handleError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-
-func createDriver()(neo4j.Driver, error){
-
-	driver, err := neo4j.NewDriver("bolt://" + configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
-	if err != nil {
-		return nil, err
-	}
-
-	return driver,err
-
+	driver, err = neo4j.NewDriver(configs.NEO4J_HOST, neo4j.BasicAuth("neo4j", configs.NEO4J_PASSWORD, ""))
+	return
 
 }
-func createSession( driver neo4j.Driver ,mode neo4j.AccessMode)(neo4j.Session, error){
+func createSession(driver neo4j.Driver, mode neo4j.AccessMode) (neo4j.Session, error) {
 	session, err := driver.Session(mode)
 	if err != nil {
 		return nil, err
 	}
 
-	return session,err
+	return session, err
 }
 
-func doReadTransaction(statement string, params map[string]interface{},resultHandler func(result neo4j.Result)(res interface{},err error))(res interface{},err error){
+func doReadTransaction(statement string, params map[string]interface{}, resultHandler func(result neo4j.Result) (res interface{}, err error)) (res interface{}, err error) {
 
 	var (
-		driver   neo4j.Driver
-		session  neo4j.Session
-		result   neo4j.Result
+		driver  neo4j.Driver
+		session neo4j.Session
+		result  neo4j.Result
 	)
 
 	driver, err = createDriver()
@@ -82,28 +36,27 @@ func doReadTransaction(statement string, params map[string]interface{},resultHan
 	}
 	defer driver.Close()
 
-	session, err = createSession(driver,neo4j.AccessModeRead)
+	session, err = createSession(driver, neo4j.AccessModeRead)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer session.Close()
 
 	return session.ReadTransaction(func(transaction neo4j.Transaction) (res interface{}, err error) {
-		result, err =  transaction.Run(statement,params)
+		result, err = transaction.Run(statement, params)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 		return resultHandler(result)
 	})
 }
 
-
-func doWriteTransaction(statement string, params map[string]interface{},resultHandler func(result neo4j.Result)(res interface{},err error))(res interface{},err error){
+func doWriteTransaction(statement string, params map[string]interface{}, resultHandler func(result neo4j.Result) (res interface{}, err error)) (res interface{}, err error) {
 
 	var (
-		driver   neo4j.Driver
-		session  neo4j.Session
-		result   neo4j.Result
+		driver  neo4j.Driver
+		session neo4j.Session
+		result  neo4j.Result
 	)
 
 	driver, err = createDriver()
@@ -112,17 +65,61 @@ func doWriteTransaction(statement string, params map[string]interface{},resultHa
 	}
 	defer driver.Close()
 
-	session, err = createSession(driver,neo4j.AccessModeWrite)
+	session, err = createSession(driver, neo4j.AccessModeWrite)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer session.Close()
 
 	return session.WriteTransaction(func(transaction neo4j.Transaction) (res interface{}, err error) {
-		result, err =  transaction.Run(statement,params)
+		result, err = transaction.Run(statement, params)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 		return resultHandler(result)
 	})
+}
+
+func saveNode(insertStmt string, updateStmt string, params map[string]interface{}, resultHandler func(result neo4j.Result) (interface{}, error)) (interface{}, error) {
+	log.Print(params)
+	if params["id"] != nil {
+		return doWriteTransaction(updateStmt, params, resultHandler)
+	} else {
+		return doWriteTransaction(insertStmt, params, resultHandler)
+	}
+}
+
+func parseSingleItemFromResult(parseSingeRecord func(record neo4j.Record) (res interface{}, err error)) func(result neo4j.Result) (res interface{}, err error) {
+	return func(result neo4j.Result) (res interface{}, err error) {
+		if result.Next() {
+			res, err = parseSingeRecord(result.Record())
+			return
+		}
+		err = result.Err()
+
+		if err == nil {
+			err = errors.New("node not found")
+		}
+		return
+	}
+
+}
+
+func parseListFromResult(parseSingeRecord func(record neo4j.Record) (res interface{}, err error)) func(result neo4j.Result) (res interface{}, err error) {
+	return func(result neo4j.Result) (res interface{}, err error) {
+		var list []interface{}
+		for ; result.Next(); {
+			item, err := parseSingeRecord(result.Record())
+
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, item)
+		}
+		if result.Err() != nil {
+			return
+		}
+		res = list
+		return
+	}
 }

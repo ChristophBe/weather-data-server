@@ -1,9 +1,9 @@
 package email
 
 import (
-	"../configs"
 	"bytes"
 	"crypto/tls"
+	"de.christophb.wetter/configs"
 	"fmt"
 	"html/template"
 	"net"

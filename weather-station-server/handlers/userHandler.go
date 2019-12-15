@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"../data"
-	"../jwt"
-	"../utils"
+	"de.christophb.wetter/data"
+	"de.christophb.wetter/jwt"
+	"de.christophb.wetter/utils"
 	"encoding/base64"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
@@ -15,28 +15,28 @@ import (
 )
 
 type UserDTO struct {
-	Email string 	`json:"email"`
+	Email    string `json:"email"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-
-func isValidUserDTO(userDTO UserDTO) bool{
+func isValidUserDTO(userDTO UserDTO) bool {
 
 	//TODO: fix regex to accept all valid email Addresses.
 	mailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	return len(userDTO.Username) > 4 && len(userDTO.Password) > 4 && mailRegex.MatchString(userDTO.Email)
 }
 
-func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
-
+func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	invalidBodyError := handlerError{Err:err, ErrorMessage:"Invalid Request Body"}
+	userRepo := data.GetUserRepository()
+
+	invalidBodyError := handlerError{Err: err, ErrorMessage: "Invalid Request Body"}
 	if err != nil {
-		handleError(w,invalidBodyError,http.StatusBadRequest)
+		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
 
@@ -44,10 +44,9 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 	var userDTO UserDTO
 	err = json.Unmarshal(b, &userDTO)
 	if err != nil {
-		handleError(w,invalidBodyError, http.StatusBadRequest)
+		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
-
 
 	//TODO add Input Validation
 	/*if isValidUserDTO(userDTO){
@@ -56,74 +55,69 @@ func CreateUserHandler(w http.ResponseWriter, r * http.Request) {
 	}*/
 
 	//Check if User with given Email is Existing
-	user , err := data.FetchUserByEmail(userDTO.Email)
-	if err != nil || user.Id != 0{
-		handleError(w,invalidBodyError,http.StatusBadRequest)
+	user, err := userRepo.FetchUserByEmail(userDTO.Email)
+	if err != nil || user.Id != 0 {
+		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
 
 	//Check if User with given Email is Existing
-	user , err = data.FetchUserByUsername(userDTO.Username)
-	if err != nil || user.Id != 0{
-		handleError(w,invalidBodyError,http.StatusBadRequest)
+	user, err = userRepo.FetchUserByUsername(userDTO.Username)
+	if err != nil || user.Id != 0 {
+		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
 
+	enableHash, enableToken, err := generateEnableToken(userDTO.Email)
 
-	enableHash, enableToken ,err  := generateEnableToken(userDTO.Email)
-
-	if err != nil{
-		handleError(w,invalidBodyError,http.StatusBadRequest)
+	if err != nil {
+		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
-
 
 	log.Print("enableToken: " + enableToken)
 
 	//Create user object
-	passwordHash,err := bcrypt.GenerateFromPassword([]byte(userDTO.Password),bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
 
-
-	newUser := data.User{CreationTime:time.Now(), Email:userDTO.Email,Username:userDTO.Username,PasswordHash:passwordHash, IsEnabled:false,EnableSecretHash: enableHash}
+	newUser := data.User{CreationTime: time.Now(), Email: userDTO.Email, Username: userDTO.Username, PasswordHash: passwordHash, IsEnabled: false, EnableSecretHash: enableHash}
 
 	//Save user to DB
-	user, err = data.UpsertUser(newUser)
-	if err != nil{
-		handleError(w,handlerError{Err:err,ErrorMessage:"unexpected error"}, http.StatusInternalServerError)
+	user, err = userRepo.SaveUser(newUser)
+	if err != nil {
+		handleError(w, handlerError{Err: err, ErrorMessage: "unexpected error"}, http.StatusInternalServerError)
 		return
 	}
 
-
-	writeJsonResponse(user,w)
+	writeJsonResponse(user, w)
 }
 
 func generateEnableToken(identifier string) ([]byte, string, error) {
 
 	enabledSecret := utils.RandStringRunes(32)
-	enabledSecretHash, err :=  bcrypt.GenerateFromPassword([]byte(enabledSecret),bcrypt.DefaultCost)
+	enabledSecretHash, err := bcrypt.GenerateFromPassword([]byte(enabledSecret), bcrypt.DefaultCost)
 
 	if err != nil {
-		return  []byte(""),"",err
+		return []byte(""), "", err
 	}
 	enableToken := base64.StdEncoding.EncodeToString([]byte( identifier + ":" + enabledSecret))
 
 	return enabledSecretHash, enableToken, nil
 }
 
-
-func UsersMe(w http.ResponseWriter, r * http.Request){
-	userId, err :=  jwt.GetUserIdBy(r)
-	if err != nil{
-		handleError(w,handlerError{Err: err,ErrorMessage:"not authenticated"}, http.StatusForbidden)
+func UsersMe(w http.ResponseWriter, r *http.Request) {
+	userId, err := jwt.GetUserIdBy(r)
+	if err != nil {
+		handleError(w, handlerError{Err: err, ErrorMessage: "not authenticated"}, http.StatusForbidden)
 		return
 	}
 
-	user, err := data.FetchUserById(userId)
+	user, err := data.GetUserRepository().FetchUserById(userId)
 
-	if err != nil{
-		handleError(w,handlerError{Err: err,ErrorMessage:"not authenticated"}, http.StatusForbidden)
+	if err != nil {
+		handleError(w, handlerError{Err: err, ErrorMessage: "not authenticated"}, http.StatusForbidden)
 		return
 	}
 
-	writeJsonResponse(user,w)
+	writeJsonResponse(user, w)
 }

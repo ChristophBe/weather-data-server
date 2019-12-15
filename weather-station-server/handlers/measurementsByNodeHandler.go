@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"../data"
-	"../jwt"
+	"de.christophb.wetter/data"
+	"de.christophb.wetter/jwt"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
@@ -16,14 +16,13 @@ import (
 
 
 func CheckNodePermissionForUser(r *http.Request) bool {
-
 	nodeId, err := getNodeIDFormRequest(r)
 	if err != nil{
 		return false
 	}
 
 
-	nodeRepo := data.MeasuringNodeRepository{}
+	nodeRepo := data.GetMeasuringNodeRepository()
 	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
 	if err != nil{
 		return false
@@ -43,9 +42,6 @@ func CheckNodePermissionForUser(r *http.Request) bool {
 }
 
 func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
-	con := data.CreateConnection()
-	defer con.Close()
-
 	nodeId, err := getNodeIDFormRequest(r)
 
 	if err != nil {
@@ -68,7 +64,7 @@ func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	// Unmarshal
-	var measuring data.Measuring
+	var measuring data.Measurement
 	err = json.Unmarshal(b, &measuring)
 	if err != nil {
 		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Request Body"}, http.StatusBadRequest)
@@ -76,20 +72,20 @@ func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 	}
 	measuring.TimeStamp = time.Now()
 
-	data.CreateMeasurement(con, nodeId, measuring)
+	_,err = data.GetMeasurementRepository().CreateMeasurement(nodeId, measuring)
+	if err != nil {
+		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Request Body"}, http.StatusBadRequest)
+		return
+	}
 }
 
 func GetAllMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
-	con := data.CreateConnection()
-	defer con.Close()
-
 	isNotAllowedToAccess := !CheckNodePermissionForUser(r)
 	if isNotAllowedToAccess {
 		handleError(w, handlerError{Err:nil,ErrorMessage:"Access Forbidden"}, http.StatusForbidden)
 		return
 
 	}
-
 
 	nodeId, err := getNodeIDFormRequest(r)
 
@@ -98,16 +94,18 @@ func GetAllMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	measurements := data.FetchAllMeasuringByNodeId(con, nodeId)
+	measurements, err:= data.GetMeasurementRepository().FetchAllMeasuringsByNodeId(nodeId)
+
+	if err != nil {
+		handleError(w, handlerError{Err:err,ErrorMessage:"can not find Measurements"}, http.StatusNotFound)
+		return
+	}
 
 	writeJsonResponse(measurements, w)
 }
 
 
 func GetLastMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
-	con := data.CreateConnection()
-	defer con.Close()
-
 	nodeId, err := getNodeIDFormRequest(r)
 	if err != nil {
 		handleError(w, handlerError{Err:err,ErrorMessage:"missing NodeId"}, http.StatusBadRequest)
@@ -122,8 +120,12 @@ func GetLastMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+	measurements, err:= data.GetMeasurementRepository().FetchLastMeasuringsByNodeId(nodeId, limit)
 
-	measurements := data.FetchLastMeasuringsByNodeId(con, nodeId, limit)
+	if err != nil {
+		handleError(w, handlerError{Err:err,ErrorMessage:"can not find Measurements"}, http.StatusNotFound)
+		return
+	}
 
 	writeJsonResponse(measurements,w)
 }
@@ -138,16 +140,12 @@ func getNodeIDFormRequest(r *http.Request) (int64, error) {
 
 
 func NodeAuthorisationHandler(nodeId int64, r *http.Request) error{
-
-	con := data.CreateConnection()
-	defer con.Close()
-
 	reqToken := r.Header.Get("Authorization")
 	splited := strings.Split(reqToken, " ")
 
 	token := splited[len(splited)-1]
 
-	authToken, err := data.FetchAuthTokenByNodeId(con, nodeId)
+	authToken, err := data.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
 
 	if err != nil {
 		return err

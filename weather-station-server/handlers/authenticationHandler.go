@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"../data"
-	"../jwt"
+	"de.christophb.wetter/data"
+	"de.christophb.wetter/jwt"
 	"encoding/json"
-	"github.com/johnnadratowski/golang-neo4j-bolt-driver/log"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -43,7 +43,7 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 		return
 	}
 
-	user, err :=data.FetchUserByEmail(authCredentials.Email)
+	user, err :=data.GetUserRepository().FetchUserByEmail(authCredentials.Email)
 
 
 	if err != nil || user.Id == 0 {
@@ -87,9 +87,9 @@ func updateLastLogin(user data.User){
 
 	user.LastLogin = time.Now()
 
-	_, err := data.UpsertUser(user)
+	_, err := data.GetUserRepository().SaveUser(user)
 
 	if err != nil {
-		log.Error(err)
+		log.Print(err)
 	}
 }

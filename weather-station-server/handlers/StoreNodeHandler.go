@@ -1,14 +1,14 @@
 package handlers
 
 import "net/http"
-import "../data"
-import "../jwt"
+import "de.christophb.wetter/data"
+import "de.christophb.wetter/jwt"
 
 func AddNodeHandler(w http.ResponseWriter, r *http.Request)  {
 
 	defer recoverHandlerErrors(w)
 
-	nodeRepo := data.MeasuringNodeRepository{}
+	nodeRepo := data.GetMeasuringNodeRepository()
 
 	userId , err := jwt.GetUserIdBy(r)
 
@@ -18,8 +18,6 @@ func AddNodeHandler(w http.ResponseWriter, r *http.Request)  {
 	err = readBody(r,&node)
 	panicIfErrorNonNil(err, InvalidBody, http.StatusBadRequest)
 	//TODO Validate input Node
-
-
 
 	node, err = nodeRepo.CreateMeasuringNode(node, userId)
 	panicIfErrorNonNil(err, "failed to save node", http.StatusInternalServerError)

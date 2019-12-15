@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./handlers"
+	"de.christophb.wetter/handlers"
 	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
@@ -9,10 +9,7 @@ import (
 	"time"
 )
 
-
 func main() {
-
-
 
 	log.Printf("Init Server")
 	router := mux.NewRouter()
@@ -30,9 +27,7 @@ func main() {
 	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
 	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
 	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
-	router.Path("/users/{userId}/nodes").HandlerFunc(handlers. 	FetchNodesByOwnerHandler).Methods(http.MethodGet)
-
-
+	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
 
 	log.Printf("Server started")
 	log.Printf("You can access the Api at http://localhost:8080")
@@ -44,16 +39,13 @@ func main() {
 	}
 }
 
-
-
 func logRequest(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w,r)
+		handler.ServeHTTP(w, r)
 	})
 }
-
 
 func corsHandler(handler http.Handler) http.Handler {
 
@@ -63,13 +55,10 @@ func corsHandler(handler http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 		} else {
-			handler.ServeHTTP(w,r)
+			handler.ServeHTTP(w, r)
 		}
 	})
 }
-
-

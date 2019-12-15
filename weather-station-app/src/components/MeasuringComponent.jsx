@@ -50,7 +50,7 @@ class MeasuringComponent extends React.Component {
 
         const{items, isLoading} = measurements;
 
-        if(isLoading){
+        if(isLoading && items.length <= 0){
             return <h1>Messwerte werden geladen.</h1>
         }
 

@@ -1,12 +1,12 @@
 package jwt
 
 import (
-	"../data"
 	"crypto/hmac"
 	"crypto/sha256"
+	"de.christophb.wetter/data"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/johnnadratowski/golang-neo4j-bolt-driver/errors"
+	"errors"
 	"log"
 	"strings"
 	"time"

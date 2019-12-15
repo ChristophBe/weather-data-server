@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"../configs"
-	"../data"
-	"../email"
-	"../jwt"
-	"github.com/johnnadratowski/golang-neo4j-bolt-driver/log"
+	"de.christophb.wetter/configs"
+	"de.christophb.wetter/data"
+	"de.christophb.wetter/email"
+	"de.christophb.wetter/jwt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,7 +31,7 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 	userId, err := jwt.GetUserIdBy(request)
 	panicIfErrorNonNil(err, "can not authenticate user", http.StatusForbidden)
 
-	owner ,err :=  data.FetchOwnerByMesuringNode(nodeId)
+	owner ,err :=  data.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
 	if err != nil || userId != owner.Id {
 		panic(handlerError{Err:err, ErrorMessage:"user is not owner",Status: http.StatusForbidden})
 	}
@@ -42,11 +42,11 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 
 
 
-	nodeRepo := data.MeasuringNodeRepository{}
+	nodeRepo := data.GetMeasuringNodeRepository()
 	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
-	user, err := data.FetchUserByEmail(shareNodeDTO.Email)
+	user, err := data.GetUserRepository().FetchUserByEmail(shareNodeDTO.Email)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
 	isNewUser := user.Id == 0
@@ -69,7 +69,7 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 		user.CreationTime = time.Now()
 		user.EnableSecretHash = enableHash
 
-		user,err = data.UpsertUser(user)
+		user,err = data.GetUserRepository().SaveUser(user)
 
 		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 	}
@@ -95,5 +95,5 @@ func sendShareMail( recipient string, params shareMailParams)  {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Error(err)
+	log.Print(err)
 }
