@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/jwt"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
@@ -10,8 +11,6 @@ import (
 	"net/http"
 	"time"
 )
-
-
 
 type authCredentialsDTO struct {
 	Email string `json:"email"`
@@ -43,7 +42,7 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 		return
 	}
 
-	user, err :=data.GetUserRepository().FetchUserByEmail(authCredentials.Email)
+	user, err := database.GetUserRepository().FetchUserByEmail(authCredentials.Email)
 
 
 	if err != nil || user.Id == 0 {
@@ -83,11 +82,11 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 
 }
 
-func updateLastLogin(user data.User){
+func updateLastLogin(user models.User){
 
 	user.LastLogin = time.Now()
 
-	_, err := data.GetUserRepository().SaveUser(user)
+	_, err := database.GetUserRepository().SaveUser(user)
 
 	if err != nil {
 		log.Print(err)

@@ -3,7 +3,7 @@ package jwt
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/models"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -29,7 +29,7 @@ type Token struct {
 	secret string
 }
 
-func GenerateToken(user data.User)( signedToken string,err error ){
+func GenerateToken(user models.User)( signedToken string,err error ){
 	header :=TokenHeader{Algorithm:"HS256", Typ:"JWT"}
 
 	encodedHeader, err := encodeTokenPayload(header)

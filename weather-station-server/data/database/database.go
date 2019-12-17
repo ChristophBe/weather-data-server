@@ -1,4 +1,4 @@
-package data
+package database
 
 import (
 	"de.christophb.wetter/config"

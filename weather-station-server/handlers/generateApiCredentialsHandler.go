@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/jwt"
 	"de.christophb.wetter/utils"
 	"github.com/gorilla/mux"
@@ -21,7 +22,7 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 	vars := mux.Vars(request)
 	nodeId, err := strconv.ParseInt(vars["nodeId"], 10, 64)
 
-	_, err = data.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
+	_, err = database.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
 
 
 	userId, err := jwt.GetUserIdBy(request)
@@ -31,7 +32,7 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	owner ,err :=  data.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
+	owner ,err :=  database.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
 	if err != nil || userId != owner.Id {
 		handleError(w,handlerError{Err:err, ErrorMessage:"user is not owner"}, http.StatusForbidden)
 	}
@@ -45,13 +46,13 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	nodeToken := data.NodeAuthToken{TokenHash:hash,CreationTime:time.Now()}
+	nodeToken := models.NodeAuthToken{TokenHash: hash,CreationTime:time.Now()}
 
 
 	//inter := credentialsInternal{TokenHash: hash,ClientId:clientId}
 	ext := credentialsExternal{Secret: secret,CreationTime:nodeToken.CreationTime}
 
-	data.GetNodeAuthTokenRepository().InsertNodeAuthToken(nodeId,nodeToken)
+	database.GetNodeAuthTokenRepository().InsertNodeAuthToken(nodeId,nodeToken)
 
 	writeJsonResponse(ext,w)
 }

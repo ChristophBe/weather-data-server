@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/jwt"
 	"de.christophb.wetter/utils"
 	"encoding/base64"
@@ -19,12 +20,13 @@ type UserDTO struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+func IsValidEmail(email string) bool {
+	var rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return len(email) < 254 && rxEmail.MatchString(email)
+}
 
 func isValidUserDTO(userDTO UserDTO) bool {
-
-	//TODO: fix regex to accept all valid email Addresses.
-	mailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
-	return len(userDTO.Username) > 4 && len(userDTO.Password) > 4 && mailRegex.MatchString(userDTO.Email)
+	return len(userDTO.Username) > 4 && len(userDTO.Password) > 4 && IsValidEmail(userDTO.Email)
 }
 
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +34,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	userRepo := data.GetUserRepository()
+	userRepo := database.GetUserRepository()
 
 	invalidBodyError := handlerError{Err: err, ErrorMessage: "Invalid Request Body"}
 	if err != nil {
@@ -48,11 +50,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO add Input Validation
-	/*if isValidUserDTO(userDTO){
+
+	if isValidUserDTO(userDTO){
 		handleError(w,invalidBodyError,http.StatusBadRequest)
 		return
-	}*/
+	}
 
 	//Check if User with given Email is Existing
 	user, err := userRepo.FetchUserByEmail(userDTO.Email)
@@ -80,7 +82,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	//Create user object
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
 
-	newUser := data.User{CreationTime: time.Now(), Email: userDTO.Email, Username: userDTO.Username, PasswordHash: passwordHash, IsEnabled: false, EnableSecretHash: enableHash}
+	newUser := models.User{CreationTime: time.Now(), Email: userDTO.Email, Username: userDTO.Username, PasswordHash: passwordHash, IsEnabled: false, EnableSecretHash: enableHash}
 
 	//Save user to DB
 	user, err = userRepo.SaveUser(newUser)
@@ -89,7 +91,12 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJsonResponse(user, w)
+	err = writeJsonResponse(user, w)
+
+	if err != nil {
+		handleError(w, handlerError{Err: err, ErrorMessage: "unexpected error"}, http.StatusInternalServerError)
+		return
+	}
 }
 
 func generateEnableToken(identifier string) ([]byte, string, error) {
@@ -112,7 +119,7 @@ func UsersMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := data.GetUserRepository().FetchUserById(userId)
+	user, err := database.GetUserRepository().FetchUserById(userId)
 
 	if err != nil {
 		handleError(w, handlerError{Err: err, ErrorMessage: "not authenticated"}, http.StatusForbidden)

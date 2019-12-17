@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/jwt"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -22,7 +23,7 @@ func CheckNodePermissionForUser(r *http.Request) bool {
 	}
 
 
-	nodeRepo := data.GetMeasuringNodeRepository()
+	nodeRepo := database.GetMeasuringNodeRepository()
 	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
 	if err != nil{
 		return false
@@ -64,7 +65,7 @@ func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	// Unmarshal
-	var measuring data.Measurement
+	var measuring models.Measurement
 	err = json.Unmarshal(b, &measuring)
 	if err != nil {
 		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Request Body"}, http.StatusBadRequest)
@@ -72,7 +73,7 @@ func PostMeasurementForNodeHandler(w http.ResponseWriter, r *http.Request){
 	}
 	measuring.TimeStamp = time.Now()
 
-	_,err = data.GetMeasurementRepository().CreateMeasurement(nodeId, measuring)
+	_,err = database.GetMeasurementRepository().CreateMeasurement(nodeId, measuring)
 	if err != nil {
 		handleError(w,handlerError{Err:err,ErrorMessage:"Invalid Request Body"}, http.StatusBadRequest)
 		return
@@ -94,7 +95,7 @@ func GetAllMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	measurements, err:= data.GetMeasurementRepository().FetchAllMeasuringsByNodeId(nodeId)
+	measurements, err:= database.GetMeasurementRepository().FetchAllMeasuringsByNodeId(nodeId)
 
 	if err != nil {
 		handleError(w, handlerError{Err:err,ErrorMessage:"can not find Measurements"}, http.StatusNotFound)
@@ -120,7 +121,7 @@ func GetLastMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	measurements, err:= data.GetMeasurementRepository().FetchLastMeasuringsByNodeId(nodeId, limit)
+	measurements, err:= database.GetMeasurementRepository().FetchLastMeasuringsByNodeId(nodeId, limit)
 
 	if err != nil {
 		handleError(w, handlerError{Err:err,ErrorMessage:"can not find Measurements"}, http.StatusNotFound)
@@ -145,7 +146,7 @@ func NodeAuthorisationHandler(nodeId int64, r *http.Request) error{
 
 	token := splited[len(splited)-1]
 
-	authToken, err := data.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
+	authToken, err := database.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
 
 	if err != nil {
 		return err

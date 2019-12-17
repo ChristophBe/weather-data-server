@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/jwt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -15,8 +16,8 @@ func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
 
 	userId,err := jwt.GetUserIdBy(r)
 
-	var nodes []data.MeasuringNode
-	nodeRepo := data.GetMeasuringNodeRepository()
+	var nodes []models.MeasuringNode
+	nodeRepo := database.GetMeasuringNodeRepository()
 
 	if err != nil {
 		//user is not authorized
@@ -48,8 +49,8 @@ func FetchNodesByOwnerHandler(w http.ResponseWriter , r * http.Request){
 		panic(handlerError{ErrorMessage:NotAuthorized,Status: http.StatusForbidden})
 	}
 
-	var nodes []data.MeasuringNode
-	nodeRepo :=data.GetMeasuringNodeRepository()
+	var nodes []models.MeasuringNode
+	nodeRepo := database.GetMeasuringNodeRepository()
 
 
 	nodes ,err = nodeRepo.FetchNodesOwnedByUserId(userId)

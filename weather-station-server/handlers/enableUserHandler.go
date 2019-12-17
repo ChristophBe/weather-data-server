@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"encoding/base64"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -33,7 +34,7 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 
 	email, secret := parseToken(enableUserDTO)
 
-	user, err := data.GetUserRepository().FetchUserByEmail(email)
+	user, err := database.GetUserRepository().FetchUserByEmail(email)
 	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
 	if user.IsEnabled {
@@ -50,7 +51,7 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 		panic(handlerError{Err:err, ErrorMessage:"invalid body or invalid token",Status:http.StatusBadRequest})
 	}
 
-	userNameTest, err := data.GetUserRepository().FetchUserByUsername(enableUserDTO.Username)
+	userNameTest, err := database.GetUserRepository().FetchUserByUsername(enableUserDTO.Username)
 	if err != nil || userNameTest.Id!= 0 {
 		panic(handlerError{Err:err, ErrorMessage:"invalid body or invalid token",Status:http.StatusBadRequest})
 	}
@@ -66,7 +67,7 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 	user.PasswordHash = passwordHash
 	
 	
-	user,err = data.GetUserRepository().SaveUser(user)
+	user,err = database.GetUserRepository().SaveUser(user)
 	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
 
 	err = writeJsonResponse(user, w)
@@ -77,10 +78,10 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 
 
 
-func enableUser(user data.User)(data.User,error) {
+func enableUser(user models.User)(models.User,error) {
 	user.IsEnabled = true
 	user.EnableSecretHash = []byte("")
-	return data.GetUserRepository().SaveUser(user)
+	return database.GetUserRepository().SaveUser(user)
 }
 
 func parseToken(enableToken EnableTokenDTO) (string, string) {

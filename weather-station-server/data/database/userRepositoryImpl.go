@@ -1,18 +1,11 @@
-package data
+package database
 
 import (
+	"de.christophb.wetter/data/models"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"time"
 )
-
-type UserRepository interface {
-	SaveUser(user User) (User, error)
-	FetchUserById(userId int64) (User, error)
-	FetchOwnerByMeasuringNode(nodeId int64) (User, error)
-	FetchUserByEmail(email string) (User, error)
-	FetchUserByUsername(username string) (User, error)
-}
 
 type userRepositoryImpl struct{}
 
@@ -25,7 +18,7 @@ func (u userRepositoryImpl) parseUserFormRecord(record neo4j.Record) (res interf
 
 	node := nodeData.(neo4j.Node)
 	props := node.Props()
-	user := User{
+	user := models.User{
 		Id:               node.Id(),
 		LastLogin:        parseTimeProp(props["lastLogin"], time.Unix(0, 0)),
 		CreationTime:     parseTimeProp(props["creationTime"], time.Unix(0, 0)),
@@ -40,7 +33,7 @@ func (u userRepositoryImpl) parseUserFormRecord(record neo4j.Record) (res interf
 	return
 }
 
-func (u userRepositoryImpl) SaveUser(user User) (savedUser User, err error) {
+func (u userRepositoryImpl) SaveUser(user models.User) (savedUser models.User, err error) {
 
 	params := map[string]interface{}{
 		"username":         user.Username,
@@ -60,51 +53,51 @@ func (u userRepositoryImpl) SaveUser(user User) (savedUser User, err error) {
 	if err != nil {
 		return
 	}
-	savedUser = result.(User)
+	savedUser = result.(models.User)
 	return
 }
 
-func (u userRepositoryImpl) FetchUserById(userId int64) (user User, err error) {
+func (u userRepositoryImpl) FetchUserById(userId int64) (user models.User, err error) {
 	params := map[string]interface{}{"userId": userId}
 	stmt := "MATCH (u:User) where id(u)={userId} return u"
-	res ,err := doReadTransaction(stmt,params,parseSingleItemFromResult(u.parseUserFormRecord))
+	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil{
 		return
 	}
-	user = res.(User)
+	user = res.(models.User)
 	return
 }
 
-func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user User, err error) {
+func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user models.User, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
 	stmt :=  "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN u"
-	res ,err := doReadTransaction(stmt,params,parseSingleItemFromResult(u.parseUserFormRecord))
+	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil{
 		return
 	}
-	user = res.(User)
+	user = res.(models.User)
 	return
 }
 
-func (u userRepositoryImpl) FetchUserByEmail(email string) (user User, err error) {
+func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, err error) {
 	params := map[string]interface{}{"email": email}
 	stmt :=  "MATCH (u:User) WHERE u.email = {email} RETURN u"
-	res ,err := doReadTransaction(stmt,params,parseSingleItemFromResult(u.parseUserFormRecord))
+	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil{
 		return
 	}
-	user = res.(User)
+	user = res.(models.User)
 	return
 }
 
-func (u userRepositoryImpl) FetchUserByUsername(username string) (user User, err error) {
+func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.User, err error) {
 	params := map[string]interface{}{"emusernameail": username}
 	stmt :=  "MATCH (u:User) WHERE u.username = {username} RETURN u"
-	res ,err := doReadTransaction(stmt,params,parseSingleItemFromResult(u.parseUserFormRecord))
+	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil{
 		return
 	}
-	user = res.(User)
+	user = res.(models.User)
 	return
 }
 

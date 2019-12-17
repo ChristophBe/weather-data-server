@@ -1,15 +1,11 @@
-package data
+package database
 
 import (
+	"de.christophb.wetter/data/models"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"time"
 )
-
-type NodeAuthTokenRepository interface {
-	InsertNodeAuthToken(nodeId int64, token NodeAuthToken) (NodeAuthToken, error)
-	FetchAuthTokenByNodeId(nodeId int64) (NodeAuthToken, error)
-}
 
 type nodeAuthTokenRepositoryIml struct{}
 
@@ -22,7 +18,7 @@ func (nodeAuthTokenRepositoryIml) tokenResultHandler(record neo4j.Record) (resul
 	}
 	node := rawNode.(neo4j.Node)
 	props := node.Props()
-	nodeAuthToken := NodeAuthToken{
+	nodeAuthToken := models.NodeAuthToken{
 		Id:           node.Id(),
 		CreationTime: parseTimeProp(props["creationTime"], time.Unix(0, 0)),
 		TokenHash:    parseByteArrayProp(props["tokenHash"], []byte("")),
@@ -30,7 +26,7 @@ func (nodeAuthTokenRepositoryIml) tokenResultHandler(record neo4j.Record) (resul
 	return nodeAuthToken, nil
 }
 
-func (r nodeAuthTokenRepositoryIml) InsertNodeAuthToken(nodeId int64, token NodeAuthToken) (savedToken NodeAuthToken, err error) {
+func (r nodeAuthTokenRepositoryIml) InsertNodeAuthToken(nodeId int64, token models.NodeAuthToken) (savedToken models.NodeAuthToken, err error) {
 	params := map[string]interface{}{
 		"creationTime": token.CreationTime.Unix(),
 		"tokenHash":    string(token.TokenHash),
@@ -44,11 +40,11 @@ func (r nodeAuthTokenRepositoryIml) InsertNodeAuthToken(nodeId int64, token Node
 	if err != nil {
 		return
 	}
-	savedToken = res.(NodeAuthToken)
+	savedToken = res.(models.NodeAuthToken)
 	return
 }
 
-func (r nodeAuthTokenRepositoryIml) FetchAuthTokenByNodeId(nodeId int64) (token NodeAuthToken, err error) {
+func (r nodeAuthTokenRepositoryIml) FetchAuthTokenByNodeId(nodeId int64) (token models.NodeAuthToken, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
 
 	stmt := "MATCH (t:NodeAuthToken)-[:AUTH_TOKEN_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN t"
@@ -58,6 +54,6 @@ func (r nodeAuthTokenRepositoryIml) FetchAuthTokenByNodeId(nodeId int64) (token 
 	if err != nil {
 		return
 	}
-	token = res.(NodeAuthToken)
+	token = res.(models.NodeAuthToken)
 	return
 }

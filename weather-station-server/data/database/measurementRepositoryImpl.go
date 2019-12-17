@@ -1,18 +1,11 @@
-package data
+package database
 
 import (
+	"de.christophb.wetter/data/models"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"time"
 )
-
-
-type MeasuringRepository interface {
-	CreateMeasurement(stationId int64, measurement Measurement)(savedMeasurement Measurement, err error)
-	FetchAllMeasuringsByNodeId( nodeId int64)(measurements []Measurement, err error)
-	FetchLastMeasuringsByNodeId( nodeId int64, hours int64)(measurements []Measurement, err error)
-}
-
 
 type measuringRepositoryImpl struct {}
 const(
@@ -20,10 +13,6 @@ const(
 	fetchAllMeasuringsForNodeStmt           = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId}  RETURN m ORDER BY m.timeStamp DESC"
 	fetchMeasuringForNodeAfterTimestampStmt = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} and m.timeStamp > {minTime} RETURN m ORDER BY m.timeStamp DESC"
 )
-
-
-
-
 
 func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (interface{},error){
 
@@ -34,7 +23,7 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 	}
 	node := nodeData.(neo4j.Node)
 	props := node.Props()
-	measurement := Measurement{
+	measurement := models.Measurement{
 		Id:          node.Id(),
 		TimeStamp:   parseTimeProp(props["timeStamp"], time.Unix(0,0)),
 		Temperature: parseFloatProp(props["pressure"],.0),
@@ -45,16 +34,16 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 	return measurement, nil
 }
 
-func (measuringRepositoryImpl)castResultList(src interface{}) (res []Measurement) {
-	res = make([]Measurement, 0)
+func (measuringRepositoryImpl)castResultList(src interface{}) (res []models.Measurement) {
+	res = make([]models.Measurement, 0)
 	list := src.([]interface{})
 	for i := 0; i < len(list); i++ {
-		res = append(res, list[i].(Measurement))
+		res = append(res, list[i].(models.Measurement))
 	}
 	return
 }
 
-func (r measuringRepositoryImpl) CreateMeasurement(stationId int64, measurement Measurement)(savedMeasurement Measurement, err error) {
+func (r measuringRepositoryImpl) CreateMeasurement(stationId int64, measurement models.Measurement)(savedMeasurement models.Measurement, err error) {
 	params:= map[string]interface{}{
 		"timeStamp":   measurement.TimeStamp.Unix(),
 		"pressure":    measurement.Pressure,
@@ -69,11 +58,11 @@ func (r measuringRepositoryImpl) CreateMeasurement(stationId int64, measurement 
 		return
 	}
 
-	savedMeasurement = res.(Measurement)
+	savedMeasurement = res.(models.Measurement)
 	return
 }
 
-func (r measuringRepositoryImpl) FetchAllMeasuringsByNodeId( nodeId int64)(measurements []Measurement, err error) {
+func (r measuringRepositoryImpl) FetchAllMeasuringsByNodeId( nodeId int64)(measurements []models.Measurement, err error) {
 
 	params := map[string]interface{}{"nodeId":nodeId}
 
@@ -83,7 +72,7 @@ func (r measuringRepositoryImpl) FetchAllMeasuringsByNodeId( nodeId int64)(measu
 	return
 }
 
-func (r measuringRepositoryImpl) FetchLastMeasuringsByNodeId(nodeId int64, hours int64)(measurements []Measurement, err error){
+func (r measuringRepositoryImpl) FetchLastMeasuringsByNodeId(nodeId int64, hours int64)(measurements []models.Measurement, err error){
 
 	minTime := time.Now().Add(time.Duration(-hours)*time.Hour)
 	params := map[string]interface{}{"nodeId":nodeId, "minTime":minTime.Unix()}

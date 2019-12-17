@@ -9,12 +9,10 @@ import (
 	"time"
 )
 
-
 const(
 	InvalidBody = "invalid Body"
 	NotAuthorized = "user not Authorized"
 )
-
 
 type handlerError struct {
 	Err          error     `json:"-"`
@@ -56,7 +54,6 @@ func handleError(w http.ResponseWriter, error handlerError, httpStatus int){
 }
 
 func readBody(r *http.Request , item interface{}) error {
-
 
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()

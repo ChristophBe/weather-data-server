@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"de.christophb.wetter/config"
-	"de.christophb.wetter/data"
+	"de.christophb.wetter/data/database"
 	"de.christophb.wetter/email"
 	"de.christophb.wetter/jwt"
 	"log"
@@ -32,7 +32,7 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 	userId, err := jwt.GetUserIdBy(request)
 	panicIfErrorNonNil(err, "can not authenticate user", http.StatusForbidden)
 
-	owner ,err :=  data.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
+	owner ,err :=  database.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
 	if err != nil || userId != owner.Id {
 		panic(handlerError{Err:err, ErrorMessage:"user is not owner",Status: http.StatusForbidden})
 	}
@@ -43,11 +43,11 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 
 
 
-	nodeRepo := data.GetMeasuringNodeRepository()
+	nodeRepo := database.GetMeasuringNodeRepository()
 	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
-	user, err := data.GetUserRepository().FetchUserByEmail(shareNodeDTO.Email)
+	user, err := database.GetUserRepository().FetchUserByEmail(shareNodeDTO.Email)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
 	isNewUser := user.Id == 0
@@ -74,7 +74,7 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 		user.CreationTime = time.Now()
 		user.EnableSecretHash = enableHash
 
-		user,err = data.GetUserRepository().SaveUser(user)
+		user,err = database.GetUserRepository().SaveUser(user)
 
 		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 	}
