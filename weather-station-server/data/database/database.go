@@ -2,6 +2,7 @@ package database
 
 import (
 	"de.christophb.wetter/config"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pkg/errors"
 	"log"
@@ -14,7 +15,8 @@ func createDriver() (driver neo4j.Driver, err error) {
 		return
 	}
 
-	driver, err = neo4j.NewDriver(configuration.Neo4j.Host, neo4j.BasicAuth(configuration.Neo4j.Username, configuration.Neo4j.Password, ""))
+	databaseHost := fmt.Sprintf("bolt://%s:%d",configuration.Neo4j.Host,configuration.Neo4j.Port)
+	driver, err = neo4j.NewDriver(databaseHost, neo4j.BasicAuth(configuration.Neo4j.Username, configuration.Neo4j.Password, ""))
 	return
 
 }

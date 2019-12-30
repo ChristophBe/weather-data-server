@@ -14,7 +14,7 @@ func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
 
 	defer recoverHandlerErrors(w)
 
-	userId,err := jwt.GetUserIdBy(r)
+	userId,err := jwt.GetUserIdByRequest(r)
 
 	var nodes []models.MeasuringNode
 	nodeRepo := database.GetMeasuringNodeRepository()
@@ -42,7 +42,7 @@ func FetchNodesByOwnerHandler(w http.ResponseWriter , r * http.Request){
 	userReqId, err := strconv.ParseInt(vars["userId"], 10, 64)
 	panicIfErrorNonNil(err, "not found",http.StatusNotFound)
 
-	userId,err := jwt.GetUserIdBy(r)
+	userId,err := jwt.GetUserIdByRequest(r)
 	panicIfErrorNonNil(err, NotAuthorized,http.StatusForbidden)
 
 	if userId != userReqId {

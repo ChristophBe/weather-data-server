@@ -14,14 +14,14 @@ class MeasuringComponent extends React.Component {
             reloadInterval:false};
     }
 
-   componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(prevProps, prevState, snapshot) {
         console.log("props test", this.props);
         if(prevProps.nodeId !== this.props.nodeId){
 
             this.props.fetch();
             this.props.select();
         }
-   }
+    }
 
     componentDidMount() {
         this.props.fetch();
@@ -36,16 +36,14 @@ class MeasuringComponent extends React.Component {
         }
     }
 
-
-
     render() {
-        console.log("props a" , this.props);
-
-
         const {node,measurements, isOwnNode, nodeId} = this.props;
 
         if(measurements == null){
             return <h1>Messwerte werden geladen.</h1>
+        }
+        if(node == null){
+            return <h1>Die Messstation wurde nicht gefunden.</h1>
         }
 
         const{items, isLoading} = measurements;
@@ -56,7 +54,8 @@ class MeasuringComponent extends React.Component {
 
         if(items.length <= 0){
             return <Fragment>
-                <h1>Es gibt leider keine akutellen Messwerte.</h1>
+                <h1>Es gibt leider keine neue Messwerte.</h1>
+                <p>Die Messstation hat in den letzen 12 Stunden keine Messwerte gesendet.</p>
             </Fragment>
         }
         const lastMeasurement = items[0];

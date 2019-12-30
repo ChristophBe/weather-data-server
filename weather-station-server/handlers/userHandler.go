@@ -113,7 +113,7 @@ func generateEnableToken(identifier string) ([]byte, string, error) {
 }
 
 func UsersMe(w http.ResponseWriter, r *http.Request) {
-	userId, err := jwt.GetUserIdBy(r)
+	userId, err := jwt.GetUserIdByRequest(r)
 	if err != nil {
 		handleError(w, handlerError{Err: err, ErrorMessage: "not authenticated"}, http.StatusForbidden)
 		return

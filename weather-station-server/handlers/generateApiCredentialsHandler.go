@@ -25,7 +25,7 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 	_, err = database.GetNodeAuthTokenRepository().FetchAuthTokenByNodeId(nodeId)
 
 
-	userId, err := jwt.GetUserIdBy(request)
+	userId, err := jwt.GetUserIdByRequest(request)
 	if err != nil{
 
 		handleError(w,handlerError{Err:err, ErrorMessage:"can not authenticate user"}, http.StatusForbidden)

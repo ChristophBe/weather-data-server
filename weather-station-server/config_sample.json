@@ -1,6 +1,7 @@
 {
   "neo4j": {
     "host": "",
+    "port": 0,
     "username": "",
     "password": ""
   },

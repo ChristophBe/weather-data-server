@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"de.christophb.wetter/config"
 	"de.christophb.wetter/data/database"
 	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/jwt"
+
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
@@ -64,7 +66,7 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 
 
 
-	tokenString, err := jwt.GenerateToken(user)
+	tokenString, err := generateToken(user)
 	if err != nil || user.Id == 0 {
 		handleError(w,handlerError{Err:err,ErrorMessage:"Failed to Create Token"},http.StatusBadRequest)
 		return
@@ -91,4 +93,20 @@ func updateLastLogin(user models.User){
 	if err != nil {
 		log.Print(err)
 	}
+}
+
+func generateToken(user models.User)( signedToken string,err error ) {
+
+	expirationTime := time.Now().Add(time.Hour * time.Duration(24))
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"sub": user.Id,
+		"exp": expirationTime,
+	})
+
+	conf,err := config.GetConfigManager().GetConfig()
+	if err != nil{
+		return
+	}
+	signedToken, err = token.SignedString([]byte(conf.Auth.AuthKey))
+	return
 }

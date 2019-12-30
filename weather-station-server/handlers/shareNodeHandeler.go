@@ -23,13 +23,11 @@ type shareMailParams struct {
 
 func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 
-
-
 	defer recoverHandlerErrors(w)
 	nodeId, err := getNodeIDFormRequest(request)
 	panicIfErrorNonNil(err,"missing nodeId", http.StatusNotFound)
 
-	userId, err := jwt.GetUserIdBy(request)
+	userId, err := jwt.GetUserIdByRequest(request)
 	panicIfErrorNonNil(err, "can not authenticate user", http.StatusForbidden)
 
 	owner ,err :=  database.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)

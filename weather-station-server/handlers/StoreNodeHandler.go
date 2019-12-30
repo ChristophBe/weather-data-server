@@ -17,7 +17,7 @@ func AddNodeHandler(w http.ResponseWriter, r *http.Request)  {
 
 	nodeRepo := database.GetMeasuringNodeRepository()
 
-	userId , err := jwt.GetUserIdBy(r)
+	userId , err := jwt.GetUserIdByRequest(r)
 
 	panicIfErrorNonNil(err, NotAuthorized, http.StatusForbidden)
 

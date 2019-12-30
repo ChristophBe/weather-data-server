@@ -15,7 +15,7 @@ func main() {
 
 
 
-	configFilePtr := flag.String("config","config.json","Path to the Config File")
+	configFilePtr := flag.String("config","config_devel.json","Path to the Config File")
 	flag.Parse()
 
 	initializeConfiguration(configFilePtr)

@@ -33,7 +33,7 @@ func CheckNodePermissionForUser(r *http.Request) bool {
 		return true
 	}
 
-	userId, err := jwt.GetUserIdBy(r)
+	userId, err := jwt.GetUserIdByRequest(r)
 	if err != nil{
 		return false
 	}

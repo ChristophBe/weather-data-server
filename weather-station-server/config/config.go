@@ -3,13 +3,18 @@ package config
 type Configuration struct {
 	Neo4j           Neo4jConfiguration `json:"neo4j"`
 	Mail            MailConfiguration  `json:"mail"`
+	Auth            AuthConfiguration  `json:"auth"`
 	FrontendBaseUrl string             `json:"frontend_base_url"`
 }
 
 type Neo4jConfiguration struct {
 	Host     string `json:"host"`
+	Port     int 	`json:"port"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+type AuthConfiguration struct {
+	AuthKey     string `json:"auth_key"`
 }
 
 type MailConfiguration struct {

@@ -6,17 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
-const (
-	createStationStatement                    = "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN m"
-	fetchMeasuringNodesStmt                   = "MATCH (m:MeasuringNode) RETURN m"
-	fetchAllPublicMeasuringNodesStmt          = "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN m"
-	fetchAllVisibleMeasuringNodesByUserIdStmt = "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN m"
-	fetchAllOwnedMeasuringNodesByUserIdStmt   = "MATCH (m:MeasuringNode)<-[:OWNER]-(u:User) WITH m, u WHERE id(u) = $userId RETURN m"
-	fetchMeasuringNodesByIdStmt               = "MATCH (m:MeasuringNode) WHERE id(m) = $nodeId RETURN  m"
-	fetchMeasuringNodesUserRelations          = "MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId return type(r)"
-	createAuthorisationRelation               = "MATCH (u:User), (n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId CREATE (u)-[r:IS_AUTHORIZED]->(n) RETURN r"
-)
-
 type measuringNodeRepositoryImpl struct{}
 
 func (measuringNodeRepositoryImpl) parseMeasuringNodeFromRecord(record neo4j.Record) (interface{}, error) {
@@ -49,7 +38,8 @@ func (measuringNodeRepositoryImpl) castListOfMeasuringNodes(input interface{}) (
 func (m measuringNodeRepositoryImpl) FetchMeasuringNodeById(nodeId int64) (measuringNode models.MeasuringNode, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
 
-	result, err := doReadTransaction(fetchMeasuringNodesByIdStmt, params, parseSingleItemFromResult(m.parseMeasuringNodeFromRecord))
+	stmt := "MATCH (m:MeasuringNode) WHERE id(m) = $nodeId RETURN  m"
+	result, err := doReadTransaction(stmt, params, parseSingleItemFromResult(m.parseMeasuringNodeFromRecord))
 
 	if err != nil {
 		return
@@ -63,7 +53,9 @@ func (measuringNodeRepositoryImpl) FetchAllMeasuringNodeUserRelations(nodeId int
 		"nodeId": nodeId,
 	}
 
-	result, err := doReadTransaction(fetchMeasuringNodesUserRelations, params, func(result neo4j.Result) (res interface{}, err error) {
+	stmt := "MATCH (u:User)-[r]->(n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId return type(r)"
+
+	result, err := doReadTransaction(stmt, params, func(result neo4j.Result) (res interface{}, err error) {
 		var relations []string
 
 		if result.Err() != nil {
@@ -85,7 +77,8 @@ func (measuringNodeRepositoryImpl) FetchAllMeasuringNodeUserRelations(nodeId int
 func (m measuringNodeRepositoryImpl) FetchAllMeasuringNodes() ([]models.MeasuringNode, error) {
 	params := map[string]interface{}{}
 
-	results, err := doReadTransaction(fetchMeasuringNodesStmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
+	stmt := "MATCH (m:MeasuringNode) RETURN m"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
 
 	if err != nil {
 		return []models.MeasuringNode{}, err
@@ -103,7 +96,8 @@ func (m measuringNodeRepositoryImpl) CreateMeasuringNode(node models.MeasuringNo
 		"ownerId":    userId,
 	}
 
-	result, err := doWriteTransaction(createStationStatement, params, parseSingleItemFromResult(m.parseMeasuringNodeFromRecord))
+	stmt := "MATCH (o:User) WHERE id(o) = $ownerId CREATE (o)-[:OWNER]->(m:MeasuringNode {name: $name, lat: $lat, lng: $lng, isPublic: $isPublic, isOutdoors: $isOutdoors}) RETURN m"
+	result, err := doWriteTransaction(stmt, params, parseSingleItemFromResult(m.parseMeasuringNodeFromRecord))
 
 	if err != nil {
 		return models.MeasuringNode{}, err
@@ -117,7 +111,8 @@ func (m measuringNodeRepositoryImpl) FetchNodesOwnedByUserId(userId int64) ([]mo
 		"userId": userId,
 	}
 
-	results, err := doReadTransaction(fetchAllOwnedMeasuringNodesByUserIdStmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
+	stmt := "MATCH (m:MeasuringNode)<-[:OWNER]-(u:User) WITH m, u WHERE id(u) = $userId RETURN m"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
 	if err != nil {
 		return []models.MeasuringNode{}, err
 	}
@@ -128,7 +123,8 @@ func (m measuringNodeRepositoryImpl) FetchAllPublicNodes() ([]models.MeasuringNo
 
 	params := map[string]interface{}{}
 
-	results, err := doReadTransaction(fetchAllPublicMeasuringNodesStmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
+	stmt:="MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN m"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
 	if err != nil {
 		return []models.MeasuringNode{}, err
 	}
@@ -141,7 +137,8 @@ func (m measuringNodeRepositoryImpl) FetchAllVisibleNodesByUserId(userId int64) 
 		"userId": userId,
 	}
 
-	results, err := doReadTransaction(fetchAllVisibleMeasuringNodesByUserIdStmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
+	stmt := "MATCH (m:MeasuringNode) WITH m OPTIONAL MATCH (m)<-[]-(u:User) WITH m, u WHERE m.isPublic OR id(u) = $userId RETURN m"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
 	if err != nil {
 		return []models.MeasuringNode{}, err
 	}
@@ -154,7 +151,8 @@ func (m measuringNodeRepositoryImpl) CreateAuthorisationRelation(node models.Mea
 		"userId": user.Id,
 	}
 
-	_, err = doWriteTransaction(createAuthorisationRelation, params, func(result neo4j.Result) (res interface{}, err error) {
+	stmt := "MATCH (u:User), (n:MeasuringNode) WHERE id(u) = $userId and id(n) = $nodeId CREATE (u)-[r:IS_AUTHORIZED]->(n) RETURN r"
+	_, err = doWriteTransaction(stmt, params, func(result neo4j.Result) (res interface{}, err error) {
 		return nil, result.Err()
 	})
 	return
