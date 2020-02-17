@@ -4,6 +4,7 @@ type Configuration struct {
 	Neo4j           Neo4jConfiguration `json:"neo4j"`
 	Mail            MailConfiguration  `json:"mail"`
 	Auth            AuthConfiguration  `json:"auth"`
+	RSAKeyFile      string			   `json:"rsa_key_file"`
 	FrontendBaseUrl string             `json:"frontend_base_url"`
 }
 

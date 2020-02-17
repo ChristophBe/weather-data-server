@@ -102,7 +102,7 @@ func GetAllMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	writeJsonResponse(measurements, w)
+	WriteJsonResponse(measurements, w)
 }
 
 
@@ -128,7 +128,7 @@ func GetLastMeasurementsByNodeHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	writeJsonResponse(measurements,w)
+	WriteJsonResponse(measurements,w)
 }
 
 

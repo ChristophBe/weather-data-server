@@ -20,6 +20,17 @@ func main() {
 
 	initializeConfiguration(configFilePtr)
 
+	conf, err := config.GetConfigManager().GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = config.GetKeyHolder().LoadKeys(conf.RSAKeyFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+
 	log.Printf("Init Server")
 	router := mux.NewRouter()
 
@@ -41,7 +52,7 @@ func main() {
 	log.Printf("Server started")
 	log.Printf("You can access the Api at http://localhost:8080")
 
-	err := http.ListenAndServe(":8080", corsHandler(logRequest(router)))
+	err = http.ListenAndServe(":8080", corsHandler(logRequest(router)))
 
 	if err != nil {
 		log.Fatal(err)

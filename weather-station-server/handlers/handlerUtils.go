@@ -21,7 +21,7 @@ type handlerError struct {
 	Status    	 int	   `json:"-"`
 }
 
-func writeJsonResponse( data interface{}, w http.ResponseWriter) error{
+func WriteJsonResponse( data interface{}, w http.ResponseWriter) error{
 
 	jsonObject,err:= json.Marshal(data)
 

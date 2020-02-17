@@ -33,9 +33,6 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 		handleError(w,handlerError{Err:err, ErrorMessage:"Invalid Request Body"},http.StatusBadRequest)
 		return
 	}
-
-
-
 	// Unmarshal
 	var authCredentials authCredentialsDTO
 	err = json.Unmarshal(b, &authCredentials)
@@ -75,7 +72,7 @@ func AuthenticationHandler(w http.ResponseWriter,r *http.Request)  {
 	go  updateLastLogin(user)
 
 	token := authTokenDTO{Token:tokenString, Type: "Bearer"}
-	err = writeJsonResponse(token,w)
+	err = WriteJsonResponse(token,w)
 
 	if err != nil || user.Id == 0 {
 		handleError(w,handlerError{Err:err,ErrorMessage:""},http.StatusInternalServerError)

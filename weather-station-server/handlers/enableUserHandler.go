@@ -38,7 +38,7 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 	panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 
 	if user.IsEnabled {
-		err = writeJsonResponse(user, w)
+		err = WriteJsonResponse(user, w)
 		panicIfErrorNonNil(err, "invalid body or invalid token",http.StatusBadRequest)
 		return
 	}
@@ -70,7 +70,7 @@ func EnableUserHandler(w http.ResponseWriter, request *http.Request)  {
 	user,err = database.GetUserRepository().SaveUser(user)
 	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
 
-	err = writeJsonResponse(user, w)
+	err = WriteJsonResponse(user, w)
 	panicIfErrorNonNil(err, "unexpected error", http.StatusInternalServerError)
 
 

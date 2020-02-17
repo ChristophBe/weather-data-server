@@ -32,5 +32,5 @@ func AddNodeHandler(w http.ResponseWriter, r *http.Request)  {
 	node, err = nodeRepo.CreateMeasuringNode(node, userId)
 	panicIfErrorNonNil(err, "failed to save node", http.StatusInternalServerError)
 
-	writeJsonResponse(node,w)
+	WriteJsonResponse(node,w)
 }

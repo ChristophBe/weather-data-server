@@ -54,6 +54,6 @@ func GenerateApiCredentialsHandler(w http.ResponseWriter, request *http.Request)
 
 	database.GetNodeAuthTokenRepository().InsertNodeAuthToken(nodeId,nodeToken)
 
-	writeJsonResponse(ext,w)
+	WriteJsonResponse(ext,w)
 }
 

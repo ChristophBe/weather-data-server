@@ -29,7 +29,7 @@ func FetchNodesHandler(w http.ResponseWriter , r * http.Request){
 		panicIfErrorNonNil(err, "can not fetch Nodes",http.StatusInternalServerError)
 	}
 
-	err = writeJsonResponse(nodes, w)
+	err = WriteJsonResponse(nodes, w)
 	panicIfErrorNonNil(err, "unexpected Error", http.StatusInternalServerError)
 }
 
@@ -57,7 +57,7 @@ func FetchNodesByOwnerHandler(w http.ResponseWriter , r * http.Request){
 	panicIfErrorNonNil(err, "can not fetch Nodes",http.StatusInternalServerError)
 
 
-	err = writeJsonResponse(nodes, w)
+	err = WriteJsonResponse(nodes, w)
 	panicIfErrorNonNil(err, "unexpected Error", http.StatusInternalServerError)
 }
 

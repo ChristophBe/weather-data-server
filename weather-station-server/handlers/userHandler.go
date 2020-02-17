@@ -91,7 +91,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = writeJsonResponse(user, w)
+	err = WriteJsonResponse(user, w)
 
 	if err != nil {
 		handleError(w, handlerError{Err: err, ErrorMessage: "unexpected error"}, http.StatusInternalServerError)
@@ -126,5 +126,5 @@ func UsersMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJsonResponse(user, w)
+	WriteJsonResponse(user, w)
 }

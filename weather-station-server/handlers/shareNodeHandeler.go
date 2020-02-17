@@ -87,7 +87,7 @@ func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
 		Msg string `json:"message"`
 	}{Msg:"the node was successfully shared"}
 
-	err = writeJsonResponse(respones,w)
+	err = WriteJsonResponse(respones,w)
 	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 }
 
