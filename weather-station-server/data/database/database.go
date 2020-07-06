@@ -15,7 +15,7 @@ func createDriver() (driver neo4j.Driver, err error) {
 		return
 	}
 
-	databaseHost := fmt.Sprintf("bolt://%s:%d",configuration.Neo4j.Host,configuration.Neo4j.Port)
+	databaseHost := fmt.Sprintf("%s:%d",configuration.Neo4j.Host,configuration.Neo4j.Port)
 	driver, err = neo4j.NewDriver(databaseHost, neo4j.BasicAuth(configuration.Neo4j.Username, configuration.Neo4j.Password, ""))
 	return
 

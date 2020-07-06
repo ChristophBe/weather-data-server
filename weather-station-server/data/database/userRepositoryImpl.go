@@ -11,7 +11,7 @@ type userRepositoryImpl struct{}
 
 func (u userRepositoryImpl) parseUserFormRecord(record neo4j.Record) (res interface{}, err error) {
 	nodeData, ok := record.Get("u")
-	if !ok{
+	if !ok {
 		err = errors.New("can not parse user-node form record")
 		return
 	}
@@ -37,7 +37,9 @@ func (u userRepositoryImpl) SaveUser(user models.User) (savedUser models.User, e
 
 	params := map[string]interface{}{
 		"username":         user.Username,
+		"email":            user.Email,
 		"lastLogin":        user.LastLogin.Unix(),
+		"creationTime":     user.CreationTime.Unix(),
 		"isEnabled":        user.IsEnabled,
 		"enableSecretHash": string(user.EnableSecretHash),
 		"passwordHash":     string(user.PasswordHash)}
@@ -60,8 +62,8 @@ func (u userRepositoryImpl) SaveUser(user models.User) (savedUser models.User, e
 func (u userRepositoryImpl) FetchUserById(userId int64) (user models.User, err error) {
 	params := map[string]interface{}{"userId": userId}
 	stmt := "MATCH (u:User) where id(u)={userId} return u"
-	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
-	if err != nil{
+	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
+	if err != nil {
 		return
 	}
 	user = res.(models.User)
@@ -70,9 +72,9 @@ func (u userRepositoryImpl) FetchUserById(userId int64) (user models.User, err e
 
 func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user models.User, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
-	stmt :=  "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN u"
-	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
-	if err != nil{
+	stmt := "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN u"
+	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
+	if err != nil {
 		return
 	}
 	user = res.(models.User)
@@ -81,9 +83,9 @@ func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user models
 
 func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, err error) {
 	params := map[string]interface{}{"email": email}
-	stmt :=  "MATCH (u:User) WHERE u.email = {email} RETURN u"
-	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
-	if err != nil{
+	stmt := "MATCH (u:User) WHERE u.email = {email} RETURN u"
+	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
+	if err != nil {
 		return
 	}
 	user = res.(models.User)
@@ -92,12 +94,11 @@ func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, er
 
 func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.User, err error) {
 	params := map[string]interface{}{"emusernameail": username}
-	stmt :=  "MATCH (u:User) WHERE u.username = {username} RETURN u"
-	res ,err := doReadTransaction(stmt,params, parseSingleItemFromResult(u.parseUserFormRecord))
-	if err != nil{
+	stmt := "MATCH (u:User) WHERE u.username = {username} RETURN u"
+	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
+	if err != nil {
 		return
 	}
 	user = res.(models.User)
 	return
 }
-

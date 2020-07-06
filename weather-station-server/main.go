@@ -3,6 +3,7 @@ package main
 import (
 	"de.christophb.wetter/config"
 	"de.christophb.wetter/handlers"
+	"de.christophb.wetter/handlers/handlerUtil"
 	"flag"
 	"github.com/gorilla/mux"
 	"log"
@@ -44,7 +45,7 @@ func main() {
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/share").HandlerFunc(handlers.ShareNodeHandler).Methods(http.MethodPost)
 	router.Path("/users").HandlerFunc(handlers.CreateUserHandler).Methods(http.MethodPost)
-	router.Path("/users/login").HandlerFunc(handlers.AuthenticationHandler).Methods(http.MethodPost)
+	router.Path("/users/login").Handler(handlerUtil.AppHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
 	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
 	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
 	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
@@ -66,7 +67,9 @@ func logRequest(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r)
 	})
 }
-
+func handlerFuncAppHandler(handler handlerUtil.AppHandler) http.HandlerFunc{
+	return handler.ServeHTTP
+}
 func corsHandler(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

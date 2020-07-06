@@ -51,21 +51,21 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	if isValidUserDTO(userDTO){
+	if !isValidUserDTO(userDTO){
 		handleError(w,invalidBodyError,http.StatusBadRequest)
 		return
 	}
 
 	//Check if User with given Email is Existing
 	user, err := userRepo.FetchUserByEmail(userDTO.Email)
-	if err != nil || user.Id != 0 {
+	if err == nil {
 		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
 
 	//Check if User with given Email is Existing
 	user, err = userRepo.FetchUserByUsername(userDTO.Username)
-	if err != nil || user.Id != 0 {
+	if err == nil  {
 		handleError(w, invalidBodyError, http.StatusBadRequest)
 		return
 	}
