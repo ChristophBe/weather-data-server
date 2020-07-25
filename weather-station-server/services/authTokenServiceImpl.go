@@ -35,7 +35,7 @@ func tokenTypeByString(typeString string) (tokenType, error) {
 		"USER_AUTH":       USER_AUTH,
 		"USER_REFRESH":    USER_REFRESH,
 		"USER_INVITATION": USER_INVITATION,
-		"USER_ENABLE	":     USER_ENABLE,
+		"USER_ENABLE":     USER_ENABLE,
 		"NODE_AUTH":       NODE_AUTH,
 	}
 	return stringToTokenType[typeString], nil
@@ -90,11 +90,11 @@ func (a authTokenServiceImpl) GenerateUserInvitationToken(node models.Invitation
 	return
 }
 
-func (a authTokenServiceImpl) GenerateUserEnableToken(node models.User) (signedToken string, err error) {
+func (a authTokenServiceImpl) GenerateUserEnableToken(user models.User) (signedToken string, err error) {
 	tokenContext := authTokenContext{
 		Type:     USER_ENABLE,
 		Expiring: time.Hour * time.Duration(24*3),
-		Sub:      node.Id,
+		Sub:      user.Id,
 	}
 	signedToken, err = a.generateToken(tokenContext)
 	return
