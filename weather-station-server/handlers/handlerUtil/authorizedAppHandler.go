@@ -6,32 +6,30 @@ import (
 	"strings"
 )
 
-type AuthorizedAppHandler struct {
-	Handler  func(sub int64, r * http.Request)(resp interface{},statusCode int, err error)
-	VerifyToken func(token string)(sub int64, err error)
+func AuthorizedAppHandler(
+	tokenVerifier func(token string)(sub int64, err error),
+	handler  func(sub int64, r * http.Request)(resp interface{},statusCode int, err error),
+)AppHandler{
+	return func(r *http.Request) (interface{}, int, error) {
+		tokenString, err := readTokenFormRequest(r)
+
+		if err!=nil {
+			panic( Forbidden("not authorized",err))
+		}
+
+		sub,err := tokenVerifier(tokenString)
+
+		if err!=nil {
+			panic( Forbidden("not authorized",err))
+		}
+
+		return handler(sub,r)
+	}
 }
 
 
-func (a AuthorizedAppHandler) serveHTTP(w http.ResponseWriter,r *http.Request){
-	defer catchErrors(w,r)
-	tokenString, err := a.getTokenFormResponse(r)
-	if err!=nil {
-		panic( Forbidden("not authorized",err))
-	}
 
-	sub,err := a.VerifyToken(tokenString)
-
-	if err!=nil {
-		panic( Forbidden("not authorized",err))
-	}
-
-	AppHandler(func(r *http.Request) (interface{}, int, error) {
-		return a.Handler(sub,r)
-	}).ServeHTTP(w,r)
-}
-
-
-func (a AuthorizedAppHandler) getTokenFormResponse(r *http.Request) (string, error){
+func readTokenFormRequest(r *http.Request) (string, error){
 	auth := r.Header.Get("Authorization")
 
 	authHeaderParts := strings.Split(auth," ")

@@ -144,6 +144,19 @@ func (m measuringNodeRepositoryImpl) FetchAllVisibleNodesByUserId(userId int64) 
 	}
 	return m.castListOfMeasuringNodes(results), nil
 }
+func (m measuringNodeRepositoryImpl) FetchAllNodesByInvitationId(invitationId int64) ([]models.MeasuringNode, error) {
+
+	params := map[string]interface{}{
+		"invitationId": invitationId,
+	}
+
+	stmt := "MATCH (m:MeasuringNode)<-[:INVITATION_FOR]-(i:Invitation) WHERE id(i) = $invitationId RETURN m"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
+	if err != nil {
+		return []models.MeasuringNode{}, err
+	}
+	return m.castListOfMeasuringNodes(results), nil
+}
 
 func (m measuringNodeRepositoryImpl) CreateAuthorisationRelation(node models.MeasuringNode, user models.User) (err error) {
 	params := map[string]interface{}{

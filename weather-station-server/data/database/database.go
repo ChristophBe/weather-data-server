@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pkg/errors"
-	"log"
 )
 
 func createDriver() (driver neo4j.Driver, err error) {
@@ -88,7 +87,6 @@ func doWriteTransaction(statement string, params map[string]interface{}, resultH
 }
 
 func saveNode(insertStmt string, updateStmt string, params map[string]interface{}, resultHandler func(result neo4j.Result) (interface{}, error)) (interface{}, error) {
-	log.Print(params)
 	if params["id"] != nil {
 		return doWriteTransaction(updateStmt, params, resultHandler)
 	} else {

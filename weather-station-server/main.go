@@ -4,6 +4,7 @@ import (
 	"de.christophb.wetter/config"
 	"de.christophb.wetter/handlers"
 	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/services"
 	"flag"
 	"github.com/gorilla/mux"
 	"log"
@@ -37,17 +38,20 @@ func main() {
 
 	rand.Seed(time.Now().Unix())
 
+	userHandlers := handlers.GetUserHandlers()
+
 	router.Path("/nodes").HandlerFunc(handlers.FetchNodesHandler).Methods(http.MethodGet)
 	router.Path("/nodes").HandlerFunc(handlers.AddNodeHandler).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.PostMeasurementForNodeHandler).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/share").HandlerFunc(handlers.ShareNodeHandler).Methods(http.MethodPost)
-	router.Path("/users").HandlerFunc(handlers.CreateUserHandler).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/share").Handler(handlerUtil.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken,handlers.ShareNodeHandler)).Methods(http.MethodPost)
+
+	router.Path("/users").Handler(userHandlers.GetCreateUserHandler()).Methods(http.MethodPost)
 	router.Path("/users/login").Handler(handlerUtil.AppHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
-	router.Path("/users/enable").HandlerFunc(handlers.EnableUserHandler).Methods(http.MethodPost)
-	router.Path("/users/me").HandlerFunc(handlers.UsersMe).Methods(http.MethodGet)
+	router.Path("/users/enable").Handler(userHandlers.GetUserEnableHandler()).Methods(http.MethodPost)
+	router.Path("/users/me").Handler(userHandlers.GetUserMeHandler()).Methods(http.MethodGet)
 	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
 
 	log.Printf("Server started")

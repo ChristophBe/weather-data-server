@@ -93,7 +93,7 @@ func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, er
 }
 
 func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.User, err error) {
-	params := map[string]interface{}{"emusernameail": username}
+	params := map[string]interface{}{"username": username}
 	stmt := "MATCH (u:User) WHERE u.username = {username} RETURN u"
 	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil {
@@ -101,4 +101,15 @@ func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.Us
 	}
 	user = res.(models.User)
 	return
+}
+
+
+func (u userRepositoryImpl) HasUserWithEmail(email string) bool {
+	user ,err := u.FetchUserByEmail(email)
+	return err == nil && user.Id != 0
+}
+
+func (u userRepositoryImpl) HasUserWithUsername(username string) bool {
+	user ,err := u.FetchUserByUsername(username)
+	return err == nil && user.Id != 0
 }

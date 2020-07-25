@@ -17,4 +17,7 @@ func GetMeasuringNodeRepository() repositories.MeasuringNodeRepository {
 func GetUserRepository() repositories.UserRepository {
 	return userRepositoryImpl{}
 }
+func GetInvitationRepository() repositories.InvitationRepository {
+	return invitationRepositoryImpl{}
+}
 

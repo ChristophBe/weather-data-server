@@ -15,6 +15,7 @@ type MeasuringNodeRepository interface {
 	FetchNodesOwnedByUserId(ownerId int64) ([]models.MeasuringNode, error)
 	CreateMeasuringNode(node models.MeasuringNode, ownerId int64) (models.MeasuringNode, error)
 	FetchAllVisibleNodesByUserId(userId int64) ([]models.MeasuringNode, error)
+	FetchAllNodesByInvitationId(invitationId int64) ([]models.MeasuringNode, error)
 	FetchMeasuringNodeById(nodeId int64) (models.MeasuringNode, error)
 	FetchAllMeasuringNodeUserRelations(nodeId int64, userId int64) ([]string, error)
 	CreateAuthorisationRelation(node models.MeasuringNode, user models.User) error
@@ -30,5 +31,13 @@ type UserRepository interface {
 	FetchUserById(userId int64) (models.User, error)
 	FetchOwnerByMeasuringNode(nodeId int64) (models.User, error)
 	FetchUserByEmail(email string) (models.User, error)
-	FetchUserByUsername(username string) (models.User, error)
+	HasUserWithEmail(email string) bool
+	HasUserWithUsername(username string) bool
+}
+
+type InvitationRepository interface {
+	SaveInvitation(invitation models.Invitation) (models.Invitation,error)
+	FetchInvitationById(invitationId int64) (models.Invitation,error)
+	AddNodeToInvitation(invitation models.Invitation, measuringNode models.MeasuringNode) error
+	FetchInvitationByEmail(email string) (models.Invitation,error )
 }

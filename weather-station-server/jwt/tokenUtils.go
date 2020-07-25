@@ -22,6 +22,6 @@ func GetTokenFormResponse(r *http.Request) (string, error){
 func GetUserIdByRequest(request *http.Request)  (userId int64, err error){
 	tokenString, err := GetTokenFormResponse(request)
 
-	userId,err = services.GetAuthTokenService().VerifyNodeAccessToken(tokenString)
+	userId,err = services.GetAuthTokenService().VerifyUserAccessToken(tokenString)
 	return
 }

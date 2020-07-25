@@ -14,24 +14,29 @@ type tokenType int
 const (
 	USER_AUTH tokenType = iota
 	USER_REFRESH
+	USER_INVITATION
+	USER_ENABLE
 	NODE_AUTH
 )
-
 
 func (t tokenType) toString() string {
 
 	tokenTypeToString := map[tokenType]string{
-		USER_AUTH:    "USER_AUTH",
-		USER_REFRESH: "USER_REFRESH",
-		NODE_AUTH:    "NODE_AUTH",
+		USER_AUTH:       "USER_AUTH",
+		USER_REFRESH:    "USER_REFRESH",
+		USER_INVITATION: "USER_INVITATION",
+		USER_ENABLE:     "USER_ENABLE",
+		NODE_AUTH:       "NODE_AUTH",
 	}
 	return tokenTypeToString[t]
 }
 func tokenTypeByString(typeString string) (tokenType, error) {
 	stringToTokenType := map[string]tokenType{
-		"USER_AUTH":    USER_AUTH,
-		"USER_REFRESH": USER_REFRESH,
-		"NODE_AUTH":    NODE_AUTH,
+		"USER_AUTH":       USER_AUTH,
+		"USER_REFRESH":    USER_REFRESH,
+		"USER_INVITATION": USER_INVITATION,
+		"USER_ENABLE	":     USER_ENABLE,
+		"NODE_AUTH":       NODE_AUTH,
 	}
 	return stringToTokenType[typeString], nil
 }
@@ -58,7 +63,7 @@ func (a authTokenServiceImpl) GenerateUserAccessToken(user models.User) (signedT
 func (a authTokenServiceImpl) GenerateUserRefreshToken(user models.User) (signedToken string, err error) {
 	tokenContext := authTokenContext{
 		Type:     USER_REFRESH,
-		Expiring: time.Hour *  time.Duration(24* 30),//30 days
+		Expiring: time.Hour * time.Duration(24*30), //30 days
 		Sub:      user.Id,
 	}
 	signedToken, err = a.generateToken(tokenContext)
@@ -69,6 +74,26 @@ func (a authTokenServiceImpl) GenerateNodeAccessToken(node models.MeasuringNode)
 	tokenContext := authTokenContext{
 		Type:     NODE_AUTH,
 		Expiring: time.Hour * time.Duration(24),
+		Sub:      node.Id,
+	}
+	signedToken, err = a.generateToken(tokenContext)
+	return
+}
+
+func (a authTokenServiceImpl) GenerateUserInvitationToken(node models.Invitation) (signedToken string, err error) {
+	tokenContext := authTokenContext{
+		Type:     USER_INVITATION,
+		Expiring: time.Hour * time.Duration(24 * 30),
+		Sub:      node.Id,
+	}
+	signedToken, err = a.generateToken(tokenContext)
+	return
+}
+
+func (a authTokenServiceImpl) GenerateUserEnableToken(node models.User) (signedToken string, err error) {
+	tokenContext := authTokenContext{
+		Type:     USER_ENABLE,
+		Expiring: time.Hour * time.Duration(24*3),
 		Sub:      node.Id,
 	}
 	signedToken, err = a.generateToken(tokenContext)
@@ -87,6 +112,14 @@ func (a authTokenServiceImpl) VerifyNodeAccessToken(token string) (int64, error)
 	return a.verifyToken(token, NODE_AUTH)
 }
 
+func (a authTokenServiceImpl) VerifyUserInvitationToken(token string) (int64, error) {
+	return a.verifyToken(token, USER_INVITATION)
+}
+
+func (a authTokenServiceImpl) VerifyUserEnableToken(token string) (int64, error) {
+	return a.verifyToken(token, USER_ENABLE)
+}
+
 func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedToken string, err error) {
 	expirationTime := time.Now().Add(context.Expiring)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -102,6 +135,7 @@ func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedTok
 	signedToken, err = token.SignedString([]byte(conf.Auth.AuthKey))
 	return
 }
+
 
 func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType tokenType) (sub int64, err error) {
 	conf, err := config.GetConfigManager().GetConfig()
@@ -131,10 +165,9 @@ func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType token
 			return
 		}
 		exp := int64(claims["exp"].(float64))
-		if time.Unix(exp,0).Before(time.Now()) {
-			err=TokenExpiredError{}
+		if time.Unix(exp, 0).Before(time.Now()) {
+			err = TokenExpiredError{}
 		}
-
 
 		sub = int64(claims["sub"].(float64))
 	}

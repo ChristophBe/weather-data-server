@@ -3,8 +3,10 @@ package handlers
 import (
 	"de.christophb.wetter/config"
 	"de.christophb.wetter/data/database"
+	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/email"
-	"de.christophb.wetter/jwt"
+	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/services"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,74 +23,94 @@ type shareMailParams struct {
 	IsNewUser bool
 }
 
-func ShareNodeHandler(w http.ResponseWriter, request *http.Request) {
+func ShareNodeHandler(userId int64, request *http.Request)(response interface{},statusCode int ,err error) {
 
-	defer recoverHandlerErrors(w)
-	nodeId, err := getNodeIDFormRequest(request)
-	panicIfErrorNonNil(err,"missing nodeId", http.StatusNotFound)
+	userRepo := database.GetUserRepository()
+	invitationRepo := database.GetInvitationRepository()
+	nodeRepo := database.GetMeasuringNodeRepository()
 
-	userId, err := jwt.GetUserIdByRequest(request)
-	panicIfErrorNonNil(err, "can not authenticate user", http.StatusForbidden)
+	node, err := getNodeFormRequest(request)
+	if err!= nil{
+		err = handlerUtil.NotFound("node not found",err)
+	}
 
-	owner ,err :=  database.GetUserRepository().FetchOwnerByMeasuringNode(nodeId)
+	owner ,err :=  userRepo.FetchOwnerByMeasuringNode(node.Id)
 	if err != nil || userId != owner.Id {
-		panic(handlerError{Err:err, ErrorMessage:"user is not owner",Status: http.StatusForbidden})
+		err = handlerUtil.Forbidden("user is not owner",err)
 	}
 
 	var shareNodeDTO ShareNodeDTO
 	err = readBody(request,&shareNodeDTO)
-	panicIfErrorNonNil(err, InvalidBody, http.StatusBadRequest)
+	if err != nil{
+		err = handlerUtil.InternalError(err)
+		return
+	}
 
-
-
-	nodeRepo := database.GetMeasuringNodeRepository()
-	node, err := nodeRepo.FetchMeasuringNodeById(nodeId)
-	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
-
-	user, err := database.GetUserRepository().FetchUserByEmail(shareNodeDTO.Email)
-	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+	user, _ := userRepo.FetchUserByEmail(shareNodeDTO.Email)
 
 	isNewUser := user.Id == 0
 
-
 	conf, err := config.GetConfigManager().GetConfig()
-	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+	if err != nil {
+		err = handlerUtil.InternalError(err)
+		return
+	}
 
 	emailParams := shareMailParams{
 		Username:  owner.Username,
 		NodeName:  node.Name,
 		IsNewUser: isNewUser,
-		NodeUrl:   conf.FrontendBaseUrl + "/nodes/" +  strconv.Itoa(int(nodeId)),
+		NodeUrl:   conf.FrontendBaseUrl + "/nodes/" +  strconv.Itoa(int(node.Id)),
 	}
 
 	if isNewUser {
-		enableHash, enableToken ,err  := generateEnableToken(shareNodeDTO.Email)
-		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
 
-		emailParams.ActivationLink = conf.FrontendBaseUrl + "/users/create/" + enableToken
+		var invitation models.Invitation
+		invitation, err = invitationRepo.FetchInvitationByEmail(shareNodeDTO.Email)
+		if err != nil {
+			invitation = models.Invitation{
+				Email: shareNodeDTO.Email,
+				CreationTime: time.Now(),
+			}
+			log.Print(invitation)
+			invitation ,err= invitationRepo.SaveInvitation(invitation)
+			if err != nil {
+				return
+			}
+		}
 
-		user.Email = shareNodeDTO.Email
-		user.IsEnabled = false
-		user.CreationTime = time.Now()
-		user.EnableSecretHash = enableHash
+		err= invitationRepo.AddNodeToInvitation(invitation,node)
+		if err != nil {
+			return
+		}
 
-		user,err = database.GetUserRepository().SaveUser(user)
+		var invitationToken string
+		invitationToken, err = services.GetAuthTokenService().GenerateUserInvitationToken(invitation)
+		if err != nil {
+			return
+		}
 
-		panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+		emailParams.ActivationLink = conf.FrontendBaseUrl + "/users/create/" + invitationToken
+
+	}	else {
+		err = nodeRepo.CreateAuthorisationRelation(node,user)
+		if err != nil {
+			return
+		}
 	}
 
 
-	err = nodeRepo.CreateAuthorisationRelation(node,user)
-	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+	recipient :=user.Email
+	if isNewUser {
+		recipient = shareNodeDTO.Email
+	}
+	go sendShareMail(recipient, emailParams)
 
-	go sendShareMail(user.Email, emailParams)
-
-	respones := struct {
+	response = struct {
 		Msg string `json:"message"`
 	}{Msg:"the node was successfully shared"}
-
-	err = WriteJsonResponse(respones,w)
-	panicIfErrorNonNil(err,"unexpected error",http.StatusInternalServerError)
+	statusCode = http.StatusOK
+	return
 }
 
 func sendShareMail( recipient string, params shareMailParams)  {
