@@ -3,7 +3,7 @@ package handlers
 import (
 	"de.christophb.wetter/data/database"
 	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/handlers/httpHandler"
 	"de.christophb.wetter/services"
 	"encoding/json"
 	"errors"
@@ -32,14 +32,14 @@ func UserAuthenticationHandler(r *http.Request) (resp interface{}, statusCode in
 
 	defer r.Body.Close()
 	if err != nil {
-		err = handlerUtil.BadRequest("Invalid Request Body", err)
+		err = httpHandler.BadRequest("Invalid Request Body", err)
 		return
 	}
 
 	var authCredentials services.AuthCredentials
 
 	if err = json.Unmarshal(body, &authCredentials); err != nil {
-		err = handlerUtil.BadRequest("Invalid Request Body", err)
+		err = httpHandler.BadRequest("Invalid Request Body", err)
 		return
 	}
 
@@ -47,28 +47,28 @@ func UserAuthenticationHandler(r *http.Request) (resp interface{}, statusCode in
 	if err != nil {
 		var UnknownGrantTypeError *services.UnknownGrantTypeError
 		if errors.As(err,&UnknownGrantTypeError) {
-			err = handlerUtil.Forbidden("unknown grant_type",err)
+			err = httpHandler.Forbidden("unknown grant_type",err)
 			return
 		}
 		var TokenExpired  *services.TokenExpiredError
 		if errors.As(err,&TokenExpired) {
-			err = handlerUtil.Forbidden("token expired",err)
+			err = httpHandler.Forbidden("token expired",err)
 			return
 		}
 
-		err = handlerUtil.Forbidden("invalid credentials",err)
+		err = httpHandler.Forbidden("invalid credentials",err)
 		return
 	}
 
 	if !user.IsEnabled {
-		err = handlerUtil.Forbidden("User is not enabled", err)
+		err = httpHandler.Forbidden("User is not enabled", err)
 		return
 	}
 
 	go updateLastLogin(user)
 
 	if resp, err = generateAuthTokenResponse(user); err != nil {
-		err = handlerUtil.InternalError(err)
+		err = httpHandler.InternalError(err)
 	}
 	statusCode = http.StatusOK
 	return

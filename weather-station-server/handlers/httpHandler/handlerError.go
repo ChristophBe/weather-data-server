@@ -1,4 +1,4 @@
-package handlerUtil
+package httpHandler
 
 import (
 	"fmt"

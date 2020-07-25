@@ -5,7 +5,7 @@ import (
 	"de.christophb.wetter/data/database"
 	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/email"
-	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/handlers/httpHandler"
 	"de.christophb.wetter/services"
 	"log"
 	"net/http"
@@ -31,18 +31,18 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 
 	node, err := getNodeFormRequest(request)
 	if err!= nil{
-		err = handlerUtil.NotFound("node not found",err)
+		err = httpHandler.NotFound("node not found",err)
 	}
 
 	owner ,err :=  userRepo.FetchOwnerByMeasuringNode(node.Id)
 	if err != nil || userId != owner.Id {
-		err = handlerUtil.Forbidden("user is not owner",err)
+		err = httpHandler.Forbidden("user is not owner",err)
 	}
 
 	var shareNodeDTO ShareNodeDTO
 	err = readBody(request,&shareNodeDTO)
 	if err != nil{
-		err = handlerUtil.InternalError(err)
+		err = httpHandler.InternalError(err)
 		return
 	}
 
@@ -52,7 +52,7 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
-		err = handlerUtil.InternalError(err)
+		err = httpHandler.InternalError(err)
 		return
 	}
 

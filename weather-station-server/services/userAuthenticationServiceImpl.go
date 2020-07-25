@@ -3,7 +3,7 @@ package services
 import (
 	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/data/repositories"
-	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/handlers/httpHandler"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,35 +33,35 @@ func (ua userAuthenticationServiceImpl) GrandUserAccess(authCredentials AuthCred
 
 func  (ua userAuthenticationServiceImpl) passwordGrant(credentials AuthCredentials) (user models.User, err error) {
 	if len(credentials.Password) < 4 || len(credentials.Email) < 4 {
-		err = handlerUtil.Forbidden("Invalid Credentials", errors.New("password or email is to short"))
+		err = httpHandler.Forbidden("Invalid Credentials", errors.New("password or email is to short"))
 		return
 	}
 
 	user, e := ua.userRepository.FetchUserByEmail(credentials.Email)
 	if e != nil || user.Id == 0 {
-		err = handlerUtil.Forbidden("Invalid Credentials", e)
+		err = httpHandler.Forbidden("Invalid Credentials", e)
 	}
 
 	e = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(credentials.Password))
 	if e != nil {
-		err = handlerUtil.Forbidden("Invalid Credentials", e)
+		err = httpHandler.Forbidden("Invalid Credentials", e)
 	}
 	return
 }
 
 func (ua userAuthenticationServiceImpl) refreshTokenGrant(credentials AuthCredentials) (user models.User, err error) {
 	if len(credentials.RefreshToken) < 0 {
-		err = handlerUtil.Forbidden("Invalid Credentials", errors.New("password or email is to short"))
+		err = httpHandler.Forbidden("Invalid Credentials", errors.New("password or email is to short"))
 		return
 	}
 
 	userId, err := ua.authTokenService.VerifyUserRefreshToken(credentials.RefreshToken)
 	if err != nil {
-		err = handlerUtil.Forbidden("Invalid Credentials", err)
+		err = httpHandler.Forbidden("Invalid Credentials", err)
 	}
 	user, e := ua.userRepository.FetchUserById(userId)
 	if e != nil || user.Id == 0 {
-		err = handlerUtil.Forbidden("Invalid Credentials", e)
+		err = httpHandler.Forbidden("Invalid Credentials", e)
 	}
 	return
 }

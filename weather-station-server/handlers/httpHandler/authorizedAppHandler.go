@@ -1,4 +1,4 @@
-package handlerUtil
+package httpHandler
 
 import (
 	"errors"
@@ -9,9 +9,9 @@ import (
 func AuthorizedAppHandler(
 	tokenVerifier func(token string)(sub int64, err error),
 	handler  func(sub int64, r * http.Request)(resp interface{},statusCode int, err error),
-)AppHandler{
+) JsonHandler {
 	return func(r *http.Request) (interface{}, int, error) {
-		tokenString, err := readTokenFormRequest(r)
+		_, tokenString, err := readTokenFormRequest(r)
 
 		if err!=nil {
 			panic( Forbidden("not authorized",err))
@@ -27,16 +27,16 @@ func AuthorizedAppHandler(
 	}
 }
 
-
-
-func readTokenFormRequest(r *http.Request) (string, error){
+func readTokenFormRequest(r *http.Request) (tokenType string, tokenString string, err error){
 	auth := r.Header.Get("Authorization")
 
 	authHeaderParts := strings.Split(auth," ")
 	if len(authHeaderParts)<2 {
-		return "", errors.New("token not found")
+		err = errors.New("token not found")
+		return
 	}
-	token := authHeaderParts[1]
-	return token, nil
+	tokenType = authHeaderParts[0]
+	tokenString = authHeaderParts[1]
+	return
 }
 

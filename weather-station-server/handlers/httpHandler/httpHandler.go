@@ -2,17 +2,16 @@ package httpHandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 )
 
-type HttpHandler func( r * http.Request) (interface{}, int,error)
 
+type JsonHandler func( r * http.Request) (interface{}, int,error)
 
+func (fn JsonHandler) catchErrors(w http.ResponseWriter, r* http.Request)  {
 
-func (fn HttpHandler) catchErrors(w http.ResponseWriter, r* http.Request)  {
 	recovered := recover()
 	if recovered == nil{
 		return
@@ -31,7 +30,7 @@ func (fn HttpHandler) catchErrors(w http.ResponseWriter, r* http.Request)  {
 	return
 }
 
-func (fn HttpHandler)ServeHTTP(w http.ResponseWriter,r* http.Request)  {
+func (fn JsonHandler)ServeHTTP(w http.ResponseWriter,r* http.Request)  {
 	defer fn.catchErrors(w,r)
 
 	resp, statusCode,err := fn(r)
@@ -43,7 +42,7 @@ func (fn HttpHandler)ServeHTTP(w http.ResponseWriter,r* http.Request)  {
 
 
 
-func (fn HttpHandler) Error(w http.ResponseWriter,message string, code int )  {
+func (fn JsonHandler) Error(w http.ResponseWriter,message string, code int )  {
 	response := struct {
 		Message string `json:"message"`
 		Timestamp time.Time `json:"timestamp"`
@@ -56,7 +55,7 @@ func (fn HttpHandler) Error(w http.ResponseWriter,message string, code int )  {
 
 
 
-func (fn HttpHandler) writeJsonResponse(resp interface{},statusCode int, w http.ResponseWriter)  {
+func (fn JsonHandler) writeJsonResponse(resp interface{},statusCode int, w http.ResponseWriter)  {
 	jsonResponse ,err:= json.Marshal(resp)
 
 	if	err != nil {
@@ -64,9 +63,15 @@ func (fn HttpHandler) writeJsonResponse(resp interface{},statusCode int, w http.
 		return
 	}
 
+	if statusCode == 0{
+		statusCode = http.StatusOK
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(statusCode)
-
-	fmt.Fprintln(w, jsonResponse)
+	_,err = w.Write(jsonResponse)
+	if	err != nil {
+		fn.Error(w,"unexpected error", http.StatusInternalServerError)
+		return
+	}
 }

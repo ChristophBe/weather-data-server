@@ -3,7 +3,7 @@ package main
 import (
 	"de.christophb.wetter/config"
 	"de.christophb.wetter/handlers"
-	"de.christophb.wetter/handlers/handlerUtil"
+	"de.christophb.wetter/handlers/httpHandler"
 	"de.christophb.wetter/services"
 	"flag"
 	"github.com/gorilla/mux"
@@ -46,10 +46,10 @@ func main() {
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/share").Handler(handlerUtil.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken,handlers.ShareNodeHandler)).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/share").Handler(httpHandler.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken,handlers.ShareNodeHandler)).Methods(http.MethodPost)
 
 	router.Path("/users").Handler(userHandlers.GetCreateUserHandler()).Methods(http.MethodPost)
-	router.Path("/users/login").Handler(handlerUtil.AppHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
+	router.Path("/users/login").Handler(httpHandler.JsonHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
 	router.Path("/users/enable").Handler(userHandlers.GetUserEnableHandler()).Methods(http.MethodPost)
 	router.Path("/users/me").Handler(userHandlers.GetUserMeHandler()).Methods(http.MethodGet)
 	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
@@ -71,7 +71,7 @@ func logRequest(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r)
 	})
 }
-func handlerFuncAppHandler(handler handlerUtil.AppHandler) http.HandlerFunc{
+func handlerFuncAppHandler(handler httpHandler.JsonHandler) http.HandlerFunc{
 	return handler.ServeHTTP
 }
 func corsHandler(handler http.Handler) http.Handler {
