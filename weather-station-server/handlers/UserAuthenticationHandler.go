@@ -5,9 +5,7 @@ import (
 	"de.christophb.wetter/data/models"
 	"de.christophb.wetter/handlers/httpHandler"
 	"de.christophb.wetter/services"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -26,49 +24,35 @@ type authTokenResponse struct {
 	Refresh string `json:"refresh_token"`
 }
 
-func UserAuthenticationHandler(r *http.Request) (resp interface{}, statusCode int, err error) {
+func UserAuthenticationHandler(r *http.Request) (resp interface{}, statusCode int) {
 
-	body, err := ioutil.ReadAll(r.Body)
-
-	defer r.Body.Close()
-	if err != nil {
-		err = httpHandler.BadRequest("Invalid Request Body", err)
-		return
-	}
-
+	authService := services.GetUserAuthenticationService()
 	var authCredentials services.AuthCredentials
+	httpHandler.ReadJsonBody(r,&authCredentials)
 
-	if err = json.Unmarshal(body, &authCredentials); err != nil {
-		err = httpHandler.BadRequest("Invalid Request Body", err)
-		return
-	}
-
-	user,err := services.GetUserAuthenticationService().GrandUserAccess(authCredentials)
+	user,err := authService.GrandUserAccess(authCredentials)
 	if err != nil {
 		var UnknownGrantTypeError *services.UnknownGrantTypeError
 		if errors.As(err,&UnknownGrantTypeError) {
-			err = httpHandler.Forbidden("unknown grant_type",err)
-			return
+			httpHandler.HandleForbidden("unknown grant_type",err)
 		}
 		var TokenExpired  *services.TokenExpiredError
 		if errors.As(err,&TokenExpired) {
-			err = httpHandler.Forbidden("token expired",err)
-			return
-		}
+			httpHandler.HandleForbidden("token expired",err)
 
-		err = httpHandler.Forbidden("invalid credentials",err)
+		}
+		httpHandler.HandleForbidden("invalid credentials",err)
 		return
 	}
 
 	if !user.IsEnabled {
-		err = httpHandler.Forbidden("User is not enabled", err)
-		return
+		httpHandler.HandleForbidden("User is not enabled", err)
 	}
 
 	go updateLastLogin(user)
 
 	if resp, err = generateAuthTokenResponse(user); err != nil {
-		err = httpHandler.InternalError(err)
+		httpHandler.HandleInternalError(err)
 	}
 	statusCode = http.StatusOK
 	return

@@ -49,52 +49,47 @@ func GetUserHandlers() UserHandlers {
 	}
 }
 
-func (u userHandlersImpl) createUser(r *http.Request) (response interface{}, statusCode int, err error) {
+func (u userHandlersImpl) createUser(r *http.Request) (response interface{}, statusCode int) {
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
 	if err != nil {
-		err = httpHandler.BadRequest(InvalidBody, err)
-		return
+		httpHandler.HandleBadRequest(InvalidBody, err)
 	}
 
 	// Unmarshal
 	var body transitory.UserCreateBody
 	err = json.Unmarshal(b, &body)
 	if err != nil {
-		err = httpHandler.BadRequest(InvalidBody, err)
-		return
+		httpHandler.HandleBadRequest(InvalidBody, err)
 	}
 
 	if !body.IsValid() {
-		err = httpHandler.BadRequest(InvalidBody, err)
-		return
+		httpHandler.HandleBadRequest(InvalidBody, err)
 	}
 
 	invitationId, err := u.tokenService.VerifyUserInvitationToken(body.InvitationToken)
 	if err != nil {
-		err = httpHandler.BadRequest("invalid invitation_token", err)
-		return
+		httpHandler.HandleBadRequest("invalid invitation_token", err)
 	}
 	invitation, err := u.invitationRepository.FetchInvitationById(invitationId)
 	if err != nil {
-		err = httpHandler.BadRequest("invalid invitation_token", err)
-		return
+		httpHandler.HandleBadRequest("invalid invitation_token", err)
 	}
 
 	if u.userRepository.HasUserWithEmail(body.Email) {
-		err = httpHandler.BadRequest(InvalidBody, nil)
-		return
+		httpHandler.HandleBadRequest(InvalidBody, nil)
 	}
 
 	if u.userRepository.HasUserWithUsername(body.Username) {
-		err = httpHandler.BadRequest(InvalidBody, nil)
-		return
+		httpHandler.HandleBadRequest(InvalidBody, nil)
 	}
 
 	//Create user object
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-
+	if err != nil {
+		httpHandler.HandleInternalError(err)
+	}
 
 	newUser := models.User{
 		CreationTime: time.Now(),
@@ -107,8 +102,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response interface{}, sta
 	//Save user to DB
 	user, err := u.userRepository.SaveUser(newUser)
 	if err != nil {
-		err = httpHandler.InternalError(err)
-		return
+		httpHandler.HandleInternalError(err)
 	}
 
 	if !user.IsEnabled {
@@ -122,47 +116,41 @@ func (u userHandlersImpl) createUser(r *http.Request) (response interface{}, sta
 }
 
 
-func (u userHandlersImpl) enableUser(r* http.Request)  (response interface{}, statusCode int, err error)  {
+func (u userHandlersImpl) enableUser(r* http.Request)  (response interface{}, statusCode int)  {
 
 	var body struct{
 		Token string `json:"token"`
 	}
 
-	if err = readBody(r, &body);err != nil{
-		err = httpHandler.BadRequest("invalid body",err)
-		return
-	}
+	httpHandler.ReadJsonBody(r,&body)
 
 	userId, err:= u.tokenService.VerifyUserEnableToken(body.Token)
 
 	if err != nil{
-		err = httpHandler.BadRequest("invalid token",err)
-		return
+		httpHandler.HandleBadRequest("invalid token",err)
 	}
 
 	user , err := u.userRepository.FetchUserById(userId)
 	if err != nil{
-		err = httpHandler.BadRequest("invalid token",err)
-		return
+		httpHandler.HandleBadRequest("invalid token",err)
 	}
 
 	user.IsEnabled = true
 
 	user ,err  = u.userRepository.SaveUser(user)
 	if err != nil{
-		err = httpHandler.InternalError(err)
-		return
+		httpHandler.HandleInternalError(err)
 	}
 	statusCode = http.StatusOK
 	response = user
 	return
 }
 
-func (u userHandlersImpl) usersMe(userId int64, _ *http.Request)(response interface{},statusCode int,err error){
-	response, err = u.userRepository.FetchUserById(userId)
+func (u userHandlersImpl) usersMe(userId int64, _ *http.Request)(response interface{},statusCode int){
+	response, err := u.userRepository.FetchUserById(userId)
 
 	if err != nil {
-		err = httpHandler.Forbidden("not authorized", err)
+		httpHandler.HandleForbidden("not authorized", err)
 	}
 	statusCode = http.StatusOK
 	return

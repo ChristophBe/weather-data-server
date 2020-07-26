@@ -8,9 +8,9 @@ import (
 
 func AuthorizedAppHandler(
 	tokenVerifier func(token string)(sub int64, err error),
-	handler  func(sub int64, r * http.Request)(resp interface{},statusCode int, err error),
+	handler  func(sub int64, r * http.Request)(resp interface{},statusCode int),
 ) JsonHandler {
-	return func(r *http.Request) (interface{}, int, error) {
+	return func(r *http.Request) (interface{}, int) {
 		_, tokenString, err := readTokenFormRequest(r)
 
 		if err!=nil {
