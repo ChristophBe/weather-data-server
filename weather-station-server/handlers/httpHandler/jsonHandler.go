@@ -7,8 +7,12 @@ import (
 	"time"
 )
 
+type HandlerResponse struct {
+	Data   interface{}
+	Status int
+}
 
-type JsonHandler func( r * http.Request) (interface{}, int)
+type JsonHandler func( r * http.Request) (HandlerResponse, error)
 
 func (fn JsonHandler) catchErrors(w http.ResponseWriter, r* http.Request)  {
 
@@ -33,8 +37,17 @@ func (fn JsonHandler) catchErrors(w http.ResponseWriter, r* http.Request)  {
 func (fn JsonHandler)ServeHTTP(w http.ResponseWriter,r* http.Request)  {
 	defer fn.catchErrors(w,r)
 
-	response, statusCode := fn(r)
-	fn.writeJsonResponse(response,statusCode, w)
+	response, err := fn(r)
+	if err != nil {
+		panic(err)
+	}
+
+	status := response.Status
+	if status == 0{
+		status = http.StatusOK
+	}
+
+	fn.writeJsonResponse(response.Data,status, w)
 }
 
 
@@ -60,9 +73,7 @@ func (fn JsonHandler) writeJsonResponse(resp interface{},statusCode int, w http.
 		return
 	}
 
-	if statusCode == 0{
-		statusCode = http.StatusOK
-	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(statusCode)

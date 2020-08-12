@@ -6,17 +6,18 @@ import (
 	"net/http"
 )
 
-func ReadJsonBody(r* http.Request , bodyData interface{})  {
+func ReadJsonBody(r* http.Request , bodyData interface{})  (err error){
 	body, err := ioutil.ReadAll(r.Body)
 
 	defer r.Body.Close()
 	if err != nil {
-		HandleBadRequest("Invalid Body", err)
+		err = BadRequest("Invalid Body", err)
+		return
 	}
 
 
 	if err = json.Unmarshal(body, bodyData); err != nil {
-		HandleBadRequest("Invalid Body", err)
+		err = BadRequest("Invalid Body", err)
 	}
 
 	return

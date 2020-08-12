@@ -13,6 +13,9 @@ type HandlerError struct {
 func (e HandlerError) Error() string {
 	return fmt.Sprintf("Message: %s StatusCode: %d",e.Message,e.StatusCode)
 }
+func (e HandlerError) Unwrap() error {
+	return e.Cause
+}
 
 func Forbidden(message string, cause error) HandlerError{
 	return HandlerError{
@@ -21,9 +24,7 @@ func Forbidden(message string, cause error) HandlerError{
 		Cause:      cause,
 	}
 }
-func HandleForbidden(message string, cause error){
-	panic(Forbidden(message,cause))
-}
+
 
 func NotFound(message string, cause error) HandlerError{
 	return HandlerError{
@@ -31,9 +32,6 @@ func NotFound(message string, cause error) HandlerError{
 		StatusCode: http.StatusNotFound,
 		Cause:      cause,
 	}
-}
-func HandleNotFound(message string, cause error){
-	panic(NotFound(message,cause))
 }
 
 func InternalError(err error)  HandlerError{
@@ -43,9 +41,6 @@ func InternalError(err error)  HandlerError{
 		Cause:      err,
 	}
 }
-func HandleInternalError(cause error){
-	panic(InternalError(cause))
-}
 
 func BadRequest(message string, cause error) HandlerError{
 	return HandlerError{
@@ -54,9 +49,5 @@ func BadRequest(message string, cause error) HandlerError{
 		Cause:      cause,
 	}
 }
-func HandleBadRequest(message string, cause error){
-	panic(BadRequest(message,cause))
-}
-
 
 

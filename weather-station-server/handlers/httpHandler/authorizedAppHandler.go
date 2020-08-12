@@ -6,11 +6,12 @@ import (
 	"strings"
 )
 
+
 func AuthorizedAppHandler(
 	tokenVerifier func(token string)(sub int64, err error),
-	handler  func(sub int64, r * http.Request)(resp interface{},statusCode int),
+	handler  func(sub int64, r * http.Request)(HandlerResponse,error),
 ) JsonHandler {
-	return func(r *http.Request) (interface{}, int) {
+	return func(r *http.Request) (respone HandlerResponse, err error) {
 		_, tokenString, err := readTokenFormRequest(r)
 
 		if err!=nil {

@@ -23,7 +23,7 @@ type shareMailParams struct {
 	IsNewUser bool
 }
 
-func ShareNodeHandler(userId int64, request *http.Request)(response interface{},statusCode int) {
+func ShareNodeHandler(userId int64, request *http.Request)(response httpHandler.HandlerResponse, err error) {
 
 	userRepo := database.GetUserRepository()
 	invitationRepo := database.GetInvitationRepository()
@@ -31,18 +31,21 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 
 	node, err := getNodeFormRequest(request)
 	if err!= nil{
-		httpHandler.HandleNotFound("node not found",err)
+		err = httpHandler.NotFound("node not found",err)
+		return
 	}
 
 	owner ,err :=  userRepo.FetchOwnerByMeasuringNode(node.Id)
 	if err != nil || userId != owner.Id {
-		httpHandler.HandleForbidden("user is not owner",err)
+		err = httpHandler.Forbidden("user is not owner",err)
+		return
 	}
 
 	var shareNodeDTO ShareNodeDTO
 	err = readBody(request,&shareNodeDTO)
 	if err != nil{
-		httpHandler.HandleInternalError(err)
+		err = httpHandler.InternalError(err)
+		return
 	}
 
 	user, _ := userRepo.FetchUserByEmail(shareNodeDTO.Email)
@@ -51,7 +54,8 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
-		httpHandler.HandleInternalError(err)
+		err = httpHandler.InternalError(err)
+		return
 	}
 
 	emailParams := shareMailParams{
@@ -73,19 +77,22 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 			log.Print(invitation)
 			invitation ,err= invitationRepo.SaveInvitation(invitation)
 			if err != nil {
-				httpHandler.HandleInternalError(err)
+				err = httpHandler.InternalError(err)
+				return
 			}
 		}
 
 		err= invitationRepo.AddNodeToInvitation(invitation,node)
 		if err != nil {
-			httpHandler.HandleInternalError(err)
+			err = httpHandler.InternalError(err)
+			return
 		}
 
 		var invitationToken string
 		invitationToken, err = services.GetAuthTokenService().GenerateUserInvitationToken(invitation)
 		if err != nil {
-			httpHandler.HandleInternalError(err)
+			err = httpHandler.InternalError(err)
+			return
 		}
 
 		emailParams.ActivationLink = conf.FrontendBaseUrl + "/users/create/" + invitationToken
@@ -93,7 +100,8 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 	}	else {
 		err = nodeRepo.CreateAuthorisationRelation(node,user)
 		if err != nil {
-			httpHandler.HandleInternalError(err)
+			err =httpHandler.InternalError(err)
+			return
 		}
 	}
 
@@ -104,10 +112,10 @@ func ShareNodeHandler(userId int64, request *http.Request)(response interface{},
 	}
 	go sendShareMail(recipient, emailParams)
 
-	response = struct {
+	response.Data = struct {
 		Msg string `json:"message"`
 	}{Msg:"the node was successfully shared"}
-	statusCode = http.StatusOK
+	response.Status = http.StatusOK
 	return
 }
 

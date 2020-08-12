@@ -24,44 +24,57 @@ type authTokenResponse struct {
 	Refresh string `json:"refresh_token"`
 }
 
-func UserAuthenticationHandler(r *http.Request) (resp interface{}, statusCode int) {
+func UserAuthenticationHandler(r *http.Request) (response httpHandler.HandlerResponse, err error) {
 
 	authService := services.GetUserAuthenticationService()
 	var authCredentials services.AuthCredentials
-	httpHandler.ReadJsonBody(r,&authCredentials)
+	err = httpHandler.ReadJsonBody(r,&authCredentials)
+	if err != nil {
+		return
+	}
 
 	user,err := authService.GrandUserAccess(authCredentials)
 	if err != nil {
-		var UnknownGrantTypeError *services.UnknownGrantTypeError
-		if errors.As(err,&UnknownGrantTypeError) {
-			httpHandler.HandleForbidden("unknown grant_type",err)
-		}
-		var TokenExpired  *services.TokenExpiredError
-		if errors.As(err,&TokenExpired) {
-			httpHandler.HandleForbidden("token expired",err)
-
-		}
-		httpHandler.HandleForbidden("invalid credentials",err)
+		err =  annotateGrandUserAccessError(err)
 		return
 	}
 
 	if !user.IsEnabled {
-		httpHandler.HandleForbidden("User is not enabled", err)
+		err = httpHandler.Forbidden("User is not enabled", nil)
+		return
 	}
 
 	go updateLastLogin(user)
 
-	if resp, err = generateAuthTokenResponse(user); err != nil {
-		httpHandler.HandleInternalError(err)
+
+	if response.Data, err = generateAuthTokenResponse(user); err != nil {
+		err = httpHandler.InternalError(err)
 	}
-	statusCode = http.StatusOK
+	response.Status = http.StatusOK
 	return
+}
+
+func annotateGrandUserAccessError(err error) error {
+	var UnknownGrantTypeError *services.UnknownGrantTypeError
+	if errors.As(err, &UnknownGrantTypeError) {
+		return httpHandler.Forbidden("unknown grant_type", err)
+
+	}
+	var TokenExpired *services.TokenExpiredError
+	if errors.As(err, &TokenExpired) {
+
+	}
+	return httpHandler.Forbidden("invalid credentials", err)
+
 }
 func generateAuthTokenResponse(user models.User) (token authTokenResponse, err error) {
 
 	tokenService := services.GetAuthTokenService()
 	token.Type = "Bearer"
 	token.Token, err = tokenService.GenerateUserAccessToken(user)
+	if err != nil {
+		return
+	}
 	token.Refresh, err = tokenService.GenerateUserRefreshToken(user)
 	return
 }
