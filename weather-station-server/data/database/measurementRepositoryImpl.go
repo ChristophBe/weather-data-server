@@ -35,11 +35,12 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 	return measurement, nil
 }
 
-func (measuringRepositoryImpl) castResultList(src interface{}) (res []models.Measurement) {
-	res = make([]models.Measurement, 0)
-	list := src.([]interface{})
-	for i := 0; i < len(list); i++ {
-		res = append(res, list[i].(models.Measurement))
+func (measuringRepositoryImpl) castResultList(input interface{}) (measurings []models.Measurement) {
+	items := input.([]interface{})
+	measurings = make([]models.Measurement, len(items))
+
+	for key, item := range items {
+		measurings[key] = item.(models.Measurement)
 	}
 	return
 }
