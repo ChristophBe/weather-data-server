@@ -5,6 +5,15 @@ import (
 	"net/http"
 )
 
+const (
+	ErrorMessageNotAuthorized   = "invalid or insufficient authorization"
+	ErrorMessageNotFound        = "not found"
+	ErrorMessageNotFoundf       = "%v not found"
+	ErrorMessageUnexpectedError = "unexpected error"
+	ErrorMessageInvalidBody     = "invalid body"
+	ErrorMessageParameterf      = "invalid parameter %v"
+)
+
 type HandlerError struct {
 	Message    string
 	StatusCode int
@@ -36,7 +45,7 @@ func NotFound(message string, cause error) HandlerError {
 
 func InternalError(err error) HandlerError {
 	return HandlerError{
-		Message:    "unexpected Error",
+		Message:    ErrorMessageUnexpectedError,
 		StatusCode: http.StatusInternalServerError,
 		Cause:      err,
 	}

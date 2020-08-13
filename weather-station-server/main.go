@@ -35,9 +35,10 @@ func main() {
 	rand.Seed(time.Now().Unix())
 
 	userHandlers := handlers.GetUserHandlers()
+	nodeHandlers := handlers.GetNodeHandlers()
 
-	router.Path("/nodes").HandlerFunc(handlers.FetchNodesHandler).Methods(http.MethodGet)
-	router.Path("/nodes").HandlerFunc(handlers.AddNodeHandler).Methods(http.MethodPost)
+	router.Path("/nodes").Handler(nodeHandlers.GetFetchNodesHandler()).Methods(http.MethodGet)
+	router.Path("/nodes").Handler(nodeHandlers.GetSaveNodeHandler()).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.PostMeasurementForNodeHandler).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
@@ -48,7 +49,7 @@ func main() {
 	router.Path("/users/login").Handler(httpHandler.JsonHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
 	router.Path("/users/enable").Handler(userHandlers.GetUserEnableHandler()).Methods(http.MethodPost)
 	router.Path("/users/me").Handler(userHandlers.GetUserMeHandler()).Methods(http.MethodGet)
-	router.Path("/users/{userId}/nodes").HandlerFunc(handlers.FetchNodesByOwnerHandler).Methods(http.MethodGet)
+	router.Path("/users/{userId}/nodes").Handler(nodeHandlers.GetFetchNodesByOwnerHandler()).Methods(http.MethodGet)
 
 	log.Printf("Server started")
 	log.Printf("You can access the Api at http://localhost:8080")

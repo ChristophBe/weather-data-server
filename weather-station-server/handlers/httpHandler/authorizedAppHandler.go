@@ -10,20 +10,30 @@ func AuthorizedAppHandler(
 	tokenVerifier func(token string) (sub int64, err error),
 	handler func(sub int64, r *http.Request) (HandlerResponse, error),
 ) JsonHandler {
-	return func(r *http.Request) (respone HandlerResponse, err error) {
+	return AuthorizedAppHandlerWithUnauthorisedFallback(tokenVerifier, handler, func(r *http.Request) (HandlerResponse, error) {
+		return HandlerResponse{}, Forbidden(ErrorMessageNotAuthorized, nil)
+	})
+}
+func AuthorizedAppHandlerWithUnauthorisedFallback(
+	tokenVerifier func(token string) (sub int64, err error),
+	handlerAuthorized func(sub int64, r *http.Request) (HandlerResponse, error),
+	handlerUnauthorized JsonHandler,
+) JsonHandler {
+	return func(r *http.Request) (response HandlerResponse, err error) {
 		_, tokenString, err := readTokenFormRequest(r)
 
 		if err != nil {
-			panic(Forbidden("not authorized", err))
+			return handlerUnauthorized(r)
 		}
 
 		sub, err := tokenVerifier(tokenString)
 
 		if err != nil {
-			panic(Forbidden("not authorized", err))
+			err =  Forbidden(ErrorMessageNotAuthorized, err)
+			return
 		}
 
-		return handler(sub, r)
+		return handlerAuthorized(sub, r)
 	}
 }
 
