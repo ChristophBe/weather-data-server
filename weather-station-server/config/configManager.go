@@ -8,13 +8,11 @@ import (
 	"sync"
 )
 
-
 type ConfigurationManager struct {
 	configuration *Configuration
-
 }
 
-func (c *ConfigurationManager) LoadConfig(configFile string)(err error){
+func (c *ConfigurationManager) LoadConfig(configFile string) (err error) {
 
 	log.Printf("Loading Configuration Configfile %s", configFile)
 
@@ -30,7 +28,7 @@ func (c *ConfigurationManager) LoadConfig(configFile string)(err error){
 	}
 	return
 }
-func (c *ConfigurationManager) GetConfig()(config *Configuration,err error){
+func (c *ConfigurationManager) GetConfig() (config *Configuration, err error) {
 
 	if c.configuration == nil {
 		err = errors.New("configuration is not loaded")
@@ -39,11 +37,10 @@ func (c *ConfigurationManager) GetConfig()(config *Configuration,err error){
 	return
 }
 
-
-
 var mut sync.Mutex
 
 var confManager *ConfigurationManager
+
 func GetConfigManager() *ConfigurationManager {
 	mut.Lock()
 	defer mut.Unlock()
@@ -53,4 +50,3 @@ func GetConfigManager() *ConfigurationManager {
 	}
 	return confManager
 }
-

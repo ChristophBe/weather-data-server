@@ -83,7 +83,7 @@ func (a authTokenServiceImpl) GenerateNodeAccessToken(node models.MeasuringNode)
 func (a authTokenServiceImpl) GenerateUserInvitationToken(node models.Invitation) (signedToken string, err error) {
 	tokenContext := authTokenContext{
 		Type:     USER_INVITATION,
-		Expiring: time.Hour * time.Duration(24 * 30),
+		Expiring: time.Hour * time.Duration(24*30),
 		Sub:      node.Id,
 	}
 	signedToken, err = a.generateToken(tokenContext)
@@ -135,7 +135,6 @@ func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedTok
 	signedToken, err = token.SignedString([]byte(conf.Auth.AuthKey))
 	return
 }
-
 
 func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType tokenType) (sub int64, err error) {
 	conf, err := config.GetConfigManager().GetConfig()

@@ -20,4 +20,3 @@ func GetUserRepository() repositories.UserRepository {
 func GetInvitationRepository() repositories.InvitationRepository {
 	return invitationRepositoryImpl{}
 }
-

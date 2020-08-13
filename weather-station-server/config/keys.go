@@ -17,7 +17,7 @@ type KeyHolder struct {
 	Key *rsa.PrivateKey
 }
 
-func (c *KeyHolder) LoadKeys(filename string)(err error){
+func (c *KeyHolder) LoadKeys(filename string) (err error) {
 
 	log.Print("Load RSA Key")
 	err = c.readKey(filename)
@@ -31,7 +31,7 @@ func (c *KeyHolder) LoadKeys(filename string)(err error){
 	bitSize := 2048
 
 	c.Key, err = rsa.GenerateKey(reader, bitSize)
-	if err != nil{
+	if err != nil {
 		return
 	}
 
@@ -39,9 +39,9 @@ func (c *KeyHolder) LoadKeys(filename string)(err error){
 	return
 }
 
-func (c*KeyHolder) readKey(filename string)(err error){
+func (c *KeyHolder) readKey(filename string) (err error) {
 	outFile, err := os.Open(filename)
-	if err != nil{
+	if err != nil {
 		return
 	}
 	defer outFile.Close()
@@ -54,18 +54,18 @@ func (c*KeyHolder) readKey(filename string)(err error){
 	}
 
 	block, _ := pem.Decode(fileContents)
-	if block == nil || block.Type != "PRIVATE KEY"{
-		panic( errors.New("failed to parse PEM block containing the key"))
+	if block == nil || block.Type != "PRIVATE KEY" {
+		panic(errors.New("failed to parse PEM block containing the key"))
 	}
 	c.Key, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	return
 }
-func (c*KeyHolder) saveKey(filename string)(err error){
+func (c *KeyHolder) saveKey(filename string) (err error) {
 	inputFile, err := os.Create(filename)
-	if err != nil{
+	if err != nil {
 		return
 	}
 	defer inputFile.Close()
@@ -76,16 +76,16 @@ func (c*KeyHolder) saveKey(filename string)(err error){
 	}
 
 	err = pem.Encode(inputFile, privateKey)
-	if err != nil{
+	if err != nil {
 		return
 	}
 	return
 }
 
-
 var keyHolderMut sync.Mutex
 
 var keyHolder *KeyHolder
+
 func GetKeyHolder() *KeyHolder {
 	keyHolderMut.Lock()
 	defer keyHolderMut.Unlock()
@@ -95,5 +95,3 @@ func GetKeyHolder() *KeyHolder {
 	}
 	return keyHolder
 }
-
-

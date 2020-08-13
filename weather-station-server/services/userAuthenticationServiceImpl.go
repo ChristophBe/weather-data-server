@@ -8,13 +8,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 type userAuthenticationServiceImpl struct {
 	authTokenService AuthTokenService
-	userRepository repositories.UserRepository
+	userRepository   repositories.UserRepository
 }
-
-
 
 func (ua userAuthenticationServiceImpl) GrandUserAccess(authCredentials AuthCredentials) (user models.User, err error) {
 
@@ -31,7 +28,7 @@ func (ua userAuthenticationServiceImpl) GrandUserAccess(authCredentials AuthCred
 	}
 }
 
-func  (ua userAuthenticationServiceImpl) passwordGrant(credentials AuthCredentials) (user models.User, err error) {
+func (ua userAuthenticationServiceImpl) passwordGrant(credentials AuthCredentials) (user models.User, err error) {
 	if len(credentials.Password) < 4 || len(credentials.Email) < 4 {
 		err = httpHandler.Forbidden("Invalid Credentials", errors.New("password or email is to short"))
 		return

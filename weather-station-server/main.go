@@ -15,9 +15,7 @@ import (
 
 func main() {
 
-
-
-	configFilePtr := flag.String("config","config_devel.json","Path to the Config File")
+	configFilePtr := flag.String("config", "config_devel.json", "Path to the Config File")
 	flag.Parse()
 
 	initializeConfiguration(configFilePtr)
@@ -30,8 +28,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-
 
 	log.Printf("Init Server")
 	router := mux.NewRouter()
@@ -46,7 +42,7 @@ func main() {
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
 	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/share").Handler(httpHandler.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken,handlers.ShareNodeHandler)).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/share").Handler(httpHandler.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken, handlers.ShareNodeHandler)).Methods(http.MethodPost)
 
 	router.Path("/users").Handler(userHandlers.GetCreateUserHandler()).Methods(http.MethodPost)
 	router.Path("/users/login").Handler(httpHandler.JsonHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
@@ -71,7 +67,7 @@ func logRequest(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r)
 	})
 }
-func handlerFuncAppHandler(handler httpHandler.JsonHandler) http.HandlerFunc{
+func handlerFuncAppHandler(handler httpHandler.JsonHandler) http.HandlerFunc {
 	return handler.ServeHTTP
 }
 func corsHandler(handler http.Handler) http.Handler {
@@ -89,7 +85,6 @@ func corsHandler(handler http.Handler) http.Handler {
 		}
 	})
 }
-
 
 func initializeConfiguration(configFilePtr *string) *config.Configuration {
 	configManager := config.GetConfigManager()

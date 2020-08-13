@@ -12,12 +12,11 @@ type UserHandlers interface {
 	GetUserEnableHandler() http.Handler
 }
 
-
 func GetUserHandlers() UserHandlers {
 	return userHandlersImpl{
-		tokenService:   services.GetAuthTokenService(),
-		invitationService:   services.GetInvitationService(),
-		userRepository: database.GetUserRepository(),
+		tokenService:         services.GetAuthTokenService(),
+		invitationService:    services.GetInvitationService(),
+		userRepository:       database.GetUserRepository(),
 		invitationRepository: database.GetInvitationRepository(),
 	}
 }

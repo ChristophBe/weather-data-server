@@ -9,12 +9,12 @@ import (
 
 func createDriver() (driver neo4j.Driver, err error) {
 
-	configuration ,err:= config.GetConfigManager().GetConfig()
-	if err != nil{
+	configuration, err := config.GetConfigManager().GetConfig()
+	if err != nil {
 		return
 	}
 
-	databaseHost := fmt.Sprintf("%s:%d",configuration.Neo4j.Host,configuration.Neo4j.Port)
+	databaseHost := fmt.Sprintf("%s:%d", configuration.Neo4j.Host, configuration.Neo4j.Port)
 	driver, err = neo4j.NewDriver(databaseHost, neo4j.BasicAuth(configuration.Neo4j.Username, configuration.Neo4j.Password, ""))
 	return
 
@@ -113,7 +113,7 @@ func parseSingleItemFromResult(parseSingeRecord func(record neo4j.Record) (res i
 func parseListFromResult(parseSingeRecord func(record neo4j.Record) (res interface{}, err error)) func(result neo4j.Result) (res interface{}, err error) {
 	return func(result neo4j.Result) (res interface{}, err error) {
 		var list []interface{}
-		for ; result.Next(); {
+		for result.Next() {
 			item, err := parseSingeRecord(result.Record())
 
 			if err != nil {

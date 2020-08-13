@@ -103,13 +103,12 @@ func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.Us
 	return
 }
 
-
 func (u userRepositoryImpl) HasUserWithEmail(email string) bool {
-	user ,err := u.FetchUserByEmail(email)
+	user, err := u.FetchUserByEmail(email)
 	return err == nil && user.Id != 0
 }
 
 func (u userRepositoryImpl) HasUserWithUsername(username string) bool {
-	user ,err := u.FetchUserByUsername(username)
+	user, err := u.FetchUserByUsername(username)
 	return err == nil && user.Id != 0
 }

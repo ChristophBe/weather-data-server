@@ -6,33 +6,32 @@ import (
 	"strings"
 )
 
-
 func AuthorizedAppHandler(
-	tokenVerifier func(token string)(sub int64, err error),
-	handler  func(sub int64, r * http.Request)(HandlerResponse,error),
+	tokenVerifier func(token string) (sub int64, err error),
+	handler func(sub int64, r *http.Request) (HandlerResponse, error),
 ) JsonHandler {
 	return func(r *http.Request) (respone HandlerResponse, err error) {
 		_, tokenString, err := readTokenFormRequest(r)
 
-		if err!=nil {
-			panic( Forbidden("not authorized",err))
+		if err != nil {
+			panic(Forbidden("not authorized", err))
 		}
 
-		sub,err := tokenVerifier(tokenString)
+		sub, err := tokenVerifier(tokenString)
 
-		if err!=nil {
-			panic( Forbidden("not authorized",err))
+		if err != nil {
+			panic(Forbidden("not authorized", err))
 		}
 
-		return handler(sub,r)
+		return handler(sub, r)
 	}
 }
 
-func readTokenFormRequest(r *http.Request) (tokenType string, tokenString string, err error){
+func readTokenFormRequest(r *http.Request) (tokenType string, tokenString string, err error) {
 	auth := r.Header.Get("Authorization")
 
-	authHeaderParts := strings.Split(auth," ")
-	if len(authHeaderParts)<2 {
+	authHeaderParts := strings.Split(auth, " ")
+	if len(authHeaderParts) < 2 {
 		err = errors.New("token not found")
 		return
 	}
@@ -40,4 +39,3 @@ func readTokenFormRequest(r *http.Request) (tokenType string, tokenString string
 	tokenString = authHeaderParts[1]
 	return
 }
-

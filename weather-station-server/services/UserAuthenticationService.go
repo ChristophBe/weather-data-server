@@ -5,17 +5,21 @@ import (
 	"de.christophb.wetter/data/models"
 	"fmt"
 )
-type InvalidCredentialsError struct {}
-func (ue InvalidCredentialsError) Error() string{
-	return"invalid credentials"
+
+type InvalidCredentialsError struct{}
+
+func (ue InvalidCredentialsError) Error() string {
+	return "invalid credentials"
 }
 
 type UnknownGrantTypeError struct {
 	grantType string
 }
-func (ue UnknownGrantTypeError) Error() string{
-	return fmt.Sprintf("unknowen grant_type of type \"%s\"",ue.grantType)
+
+func (ue UnknownGrantTypeError) Error() string {
+	return fmt.Sprintf("unknowen grant_type of type \"%s\"", ue.grantType)
 }
+
 type AuthCredentials struct {
 	GrantType    string `json:"grant_type"`
 	Email        string `json:"email"`
@@ -24,13 +28,13 @@ type AuthCredentials struct {
 }
 
 type UserAuthenticationService interface {
-	GrandUserAccess(AuthCredentials)(models.User,error)
+	GrandUserAccess(AuthCredentials) (models.User, error)
 }
 
-func GetUserAuthenticationService() UserAuthenticationService{
+func GetUserAuthenticationService() UserAuthenticationService {
 	return userAuthenticationServiceImpl{
 		authTokenService: GetAuthTokenService(),
-		userRepository: database.GetUserRepository(),
+		userRepository:   database.GetUserRepository(),
 	}
 
 }

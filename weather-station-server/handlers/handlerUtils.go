@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-const(
-	InvalidBody = "invalid Body"
+const (
+	InvalidBody   = "invalid Body"
 	NotAuthorized = "user not Authorized"
 )
 
@@ -18,12 +18,12 @@ type handlerError struct {
 	Err          error     `json:"-"`
 	ErrorMessage string    `json:"error"`
 	Timestamp    time.Time `json:"timestamp"`
-	Status    	 int	   `json:"-"`
+	Status       int       `json:"-"`
 }
 
-func WriteJsonResponse( data interface{}, w http.ResponseWriter) error{
+func WriteJsonResponse(data interface{}, w http.ResponseWriter) error {
 
-	jsonObject,err:= json.Marshal(data)
+	jsonObject, err := json.Marshal(data)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,14 +35,12 @@ func WriteJsonResponse( data interface{}, w http.ResponseWriter) error{
 	return nil
 }
 
-func handleError(w http.ResponseWriter, error handlerError, httpStatus int){
+func handleError(w http.ResponseWriter, error handlerError, httpStatus int) {
 
-	error.Timestamp= time.Now()
+	error.Timestamp = time.Now()
 	log.Println(error)
 
-
-	jsonObj ,err  := json.Marshal(error)
-
+	jsonObj, err := json.Marshal(error)
 
 	if err != nil {
 		log.Fatal("can not marshal error")
@@ -53,7 +51,7 @@ func handleError(w http.ResponseWriter, error handlerError, httpStatus int){
 	//panic(error.Err)
 }
 
-func readBody(r *http.Request , item interface{}) error {
+func readBody(r *http.Request, item interface{}) error {
 
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -66,7 +64,6 @@ func readBody(r *http.Request , item interface{}) error {
 	}
 	return nil
 }
-
 
 func recoverHandlerErrors(w http.ResponseWriter) {
 	if r := recover(); r != nil {
@@ -81,8 +78,8 @@ func recoverHandlerErrors(w http.ResponseWriter) {
 
 }
 
-func panicIfErrorNonNil(err error, errorMessage string, status int){
+func panicIfErrorNonNil(err error, errorMessage string, status int) {
 	if err != nil {
-		panic(handlerError{Err:err,ErrorMessage:errorMessage,Status:status})
+		panic(handlerError{Err: err, ErrorMessage: errorMessage, Status: status})
 	}
 }

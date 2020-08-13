@@ -5,9 +5,9 @@ import (
 )
 
 type MeasuringRepository interface {
-	CreateMeasurement(stationId int64, measurement models.Measurement)(savedMeasurement models.Measurement, err error)
-	FetchAllMeasuringsByNodeId( nodeId int64)(measurements []models.Measurement, err error)
-	FetchLastMeasuringsByNodeId( nodeId int64, hours int64)(measurements []models.Measurement, err error)
+	CreateMeasurement(stationId int64, measurement models.Measurement) (savedMeasurement models.Measurement, err error)
+	FetchAllMeasuringsByNodeId(nodeId int64) (measurements []models.Measurement, err error)
+	FetchLastMeasuringsByNodeId(nodeId int64, hours int64) (measurements []models.Measurement, err error)
 }
 
 type MeasuringNodeRepository interface {
@@ -36,8 +36,8 @@ type UserRepository interface {
 }
 
 type InvitationRepository interface {
-	SaveInvitation(invitation models.Invitation) (models.Invitation,error)
-	FetchInvitationById(invitationId int64) (models.Invitation,error)
+	SaveInvitation(invitation models.Invitation) (models.Invitation, error)
+	FetchInvitationById(invitationId int64) (models.Invitation, error)
 	AddNodeToInvitation(invitation models.Invitation, measuringNode models.MeasuringNode) error
-	FetchInvitationByEmail(email string) (models.Invitation,error )
+	FetchInvitationByEmail(email string) (models.Invitation, error)
 }

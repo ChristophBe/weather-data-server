@@ -6,18 +6,19 @@ import (
 )
 
 type HandlerError struct {
-	Message string
+	Message    string
 	StatusCode int
-	Cause error
+	Cause      error
 }
+
 func (e HandlerError) Error() string {
-	return fmt.Sprintf("Message: %s StatusCode: %d",e.Message,e.StatusCode)
+	return fmt.Sprintf("Message: %s StatusCode: %d", e.Message, e.StatusCode)
 }
 func (e HandlerError) Unwrap() error {
 	return e.Cause
 }
 
-func Forbidden(message string, cause error) HandlerError{
+func Forbidden(message string, cause error) HandlerError {
 	return HandlerError{
 		Message:    message,
 		StatusCode: http.StatusForbidden,
@@ -25,8 +26,7 @@ func Forbidden(message string, cause error) HandlerError{
 	}
 }
 
-
-func NotFound(message string, cause error) HandlerError{
+func NotFound(message string, cause error) HandlerError {
 	return HandlerError{
 		Message:    message,
 		StatusCode: http.StatusNotFound,
@@ -34,7 +34,7 @@ func NotFound(message string, cause error) HandlerError{
 	}
 }
 
-func InternalError(err error)  HandlerError{
+func InternalError(err error) HandlerError {
 	return HandlerError{
 		Message:    "unexpected Error",
 		StatusCode: http.StatusInternalServerError,
@@ -42,12 +42,10 @@ func InternalError(err error)  HandlerError{
 	}
 }
 
-func BadRequest(message string, cause error) HandlerError{
+func BadRequest(message string, cause error) HandlerError {
 	return HandlerError{
 		Message:    message,
 		StatusCode: http.StatusBadRequest,
 		Cause:      cause,
 	}
 }
-
-

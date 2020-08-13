@@ -14,4 +14,3 @@ func GetInvitationService() InvitationService {
 		measuringNodeRepository: database.GetMeasuringNodeRepository(),
 	}
 }
-

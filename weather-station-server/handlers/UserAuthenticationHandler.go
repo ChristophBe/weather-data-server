@@ -28,14 +28,14 @@ func UserAuthenticationHandler(r *http.Request) (response httpHandler.HandlerRes
 
 	authService := services.GetUserAuthenticationService()
 	var authCredentials services.AuthCredentials
-	err = httpHandler.ReadJsonBody(r,&authCredentials)
+	err = httpHandler.ReadJsonBody(r, &authCredentials)
 	if err != nil {
 		return
 	}
 
-	user,err := authService.GrandUserAccess(authCredentials)
+	user, err := authService.GrandUserAccess(authCredentials)
 	if err != nil {
-		err =  annotateGrandUserAccessError(err)
+		err = annotateGrandUserAccessError(err)
 		return
 	}
 
@@ -45,7 +45,6 @@ func UserAuthenticationHandler(r *http.Request) (response httpHandler.HandlerRes
 	}
 
 	go updateLastLogin(user)
-
 
 	if response.Data, err = generateAuthTokenResponse(user); err != nil {
 		err = httpHandler.InternalError(err)
@@ -78,7 +77,6 @@ func generateAuthTokenResponse(user models.User) (token authTokenResponse, err e
 	token.Refresh, err = tokenService.GenerateUserRefreshToken(user)
 	return
 }
-
 
 func updateLastLogin(user models.User) {
 

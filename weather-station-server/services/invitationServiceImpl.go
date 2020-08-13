@@ -12,8 +12,6 @@ type invitationServiceImpl struct {
 
 func (i invitationServiceImpl) HandleInvitation(user models.User, invitationId int64) (err error) {
 
-
-
 	nodes, err := i.measuringNodeRepository.FetchAllNodesByInvitationId(invitationId)
 
 	if err != nil {

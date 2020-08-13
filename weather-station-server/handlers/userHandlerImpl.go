@@ -20,10 +20,9 @@ import (
 
 type userHandlersImpl struct {
 	tokenService         services.AuthTokenService
-	invitationService 	 services.InvitationService
+	invitationService    services.InvitationService
 	userRepository       repositories.UserRepository
 	invitationRepository repositories.InvitationRepository
-
 }
 
 func (u userHandlersImpl) GetCreateUserHandler() http.Handler {
@@ -50,7 +49,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	var body transitory.UserCreateBody
 	err = json.Unmarshal(b, &body)
 	if err != nil {
-		err= httpHandler.BadRequest(InvalidBody, err)
+		err = httpHandler.BadRequest(InvalidBody, err)
 		return
 	}
 
@@ -102,9 +101,9 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	}
 
 	go func() {
-		err := u.invitationService.HandleInvitation(user,invitationId)
+		err := u.invitationService.HandleInvitation(user, invitationId)
 		if err != nil {
-			log.Fatal(fmt.Errorf("failed to handle invitation cause:%w",err))
+			log.Fatal(fmt.Errorf("failed to handle invitation cause:%w", err))
 		}
 	}()
 	response.Status = http.StatusOK
@@ -112,33 +111,32 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	return
 }
 
+func (u userHandlersImpl) enableUser(r *http.Request) (response httpHandler.HandlerResponse, err error) {
 
-func (u userHandlersImpl) enableUser(r* http.Request)  (response httpHandler.HandlerResponse,err error)  {
-
-	var body struct{
+	var body struct {
 		Token string `json:"token"`
 	}
 
-	httpHandler.ReadJsonBody(r,&body)
+	httpHandler.ReadJsonBody(r, &body)
 
-	userId, err:= u.tokenService.VerifyUserEnableToken(body.Token)
+	userId, err := u.tokenService.VerifyUserEnableToken(body.Token)
 
-	if err != nil{
-		err =  httpHandler.BadRequest("invalid token",err)
+	if err != nil {
+		err = httpHandler.BadRequest("invalid token", err)
 		return
 	}
 
-	user , err := u.userRepository.FetchUserById(userId)
-	if err != nil{
-		err =  httpHandler.BadRequest("invalid token",err)
+	user, err := u.userRepository.FetchUserById(userId)
+	if err != nil {
+		err = httpHandler.BadRequest("invalid token", err)
 		return
 	}
 
 	user.IsEnabled = true
 
-	user ,err  = u.userRepository.SaveUser(user)
-	if err != nil{
-		err =  httpHandler.InternalError(err)
+	user, err = u.userRepository.SaveUser(user)
+	if err != nil {
+		err = httpHandler.InternalError(err)
 		return
 	}
 	response.Status = http.StatusOK
@@ -146,8 +144,8 @@ func (u userHandlersImpl) enableUser(r* http.Request)  (response httpHandler.Han
 	return
 }
 
-func (u userHandlersImpl) usersMe(userId int64, _ *http.Request)(response httpHandler.HandlerResponse,err error){
-	user , err := u.userRepository.FetchUserById(userId)
+func (u userHandlersImpl) usersMe(userId int64, _ *http.Request) (response httpHandler.HandlerResponse, err error) {
+	user, err := u.userRepository.FetchUserById(userId)
 
 	if err != nil {
 		err = httpHandler.Forbidden("not authorized", err)
@@ -157,7 +155,6 @@ func (u userHandlersImpl) usersMe(userId int64, _ *http.Request)(response httpHa
 	return
 
 }
-
 
 func sendEnableToken(user models.User) {
 

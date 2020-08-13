@@ -61,7 +61,7 @@ func (measuringNodeRepositoryImpl) FetchAllMeasuringNodeUserRelations(nodeId int
 		if result.Err() != nil {
 			return relations, result.Err()
 		}
-		for ; result.Next(); {
+		for result.Next() {
 			relation := result.Record().GetByIndex(0).(string)
 			relations = append(relations, relation)
 		}
@@ -123,7 +123,7 @@ func (m measuringNodeRepositoryImpl) FetchAllPublicNodes() ([]models.MeasuringNo
 
 	params := map[string]interface{}{}
 
-	stmt:="MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN m"
+	stmt := "MATCH (m:MeasuringNode) WHERE m.isPublic = true RETURN m"
 	results, err := doReadTransaction(stmt, params, parseListFromResult(m.parseMeasuringNodeFromRecord))
 	if err != nil {
 		return []models.MeasuringNode{}, err

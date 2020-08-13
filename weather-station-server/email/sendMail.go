@@ -11,33 +11,29 @@ import (
 	"net/smtp"
 )
 
+func SendHtmlMail(recipient string, subj string, templateFileName string, themeParams interface{}) error {
 
-func SendHtmlMail(recipient string,subj string,templateFileName string,themeParams interface{}) error{
-
-	html , err := parsHtml("email/tmpl/" + templateFileName,themeParams)
+	html, err := parsHtml("email/tmpl/"+templateFileName, themeParams)
 
 	if err != nil {
 		return err
 	}
 
-
-	return SendMail(recipient,subj,html)
-
+	return SendMail(recipient, subj, html)
 
 }
 
-func SendMail(recipient string, subj string, msg string)  error{
+func SendMail(recipient string, subj string, msg string) error {
 
-	conf ,err := config.GetConfigManager().GetConfig()
+	conf, err := config.GetConfigManager().GetConfig()
 
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	mailConf := conf.Mail
 	from := mail.Address{"Wetter | christophb.de", mailConf.MailAddress}
-	to   := mail.Address{"", recipient}
-
+	to := mail.Address{"", recipient}
 
 	// Setup headers
 	headers := make(map[string]string)
@@ -50,22 +46,22 @@ func SendMail(recipient string, subj string, msg string)  error{
 
 	// Setup message
 	message := ""
-	for k,v := range headers {
+	for k, v := range headers {
 		message += fmt.Sprintf("%s: %s\r\n", k, v)
 	}
 	message += "\r\n" + msg
 
 	// Connect to the SMTP Server
-	servername := fmt.Sprintf("%s:%d",mailConf.Server,mailConf.ServerPort)
+	servername := fmt.Sprintf("%s:%d", mailConf.Server, mailConf.ServerPort)
 
 	host, _, _ := net.SplitHostPort(servername)
 
 	auth := smtp.PlainAuth("", mailConf.Username, mailConf.Password, mailConf.Server)
 
 	// TLS config
-	tlsconfig := &tls.Config {
+	tlsconfig := &tls.Config{
 		InsecureSkipVerify: true,
-		ServerName: host,
+		ServerName:         host,
 	}
 
 	// Here is the key, you need to call tls.Dial instead of smtp.Dial
@@ -117,15 +113,14 @@ func SendMail(recipient string, subj string, msg string)  error{
 
 }
 
-func parsHtml( templateFileName string,data interface{}) (string, error) {
+func parsHtml(templateFileName string, data interface{}) (string, error) {
 	t, err := template.ParseFiles(templateFileName)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	buf := new(bytes.Buffer)
 	if err = t.Execute(buf, data); err != nil {
-		return "",err
+		return "", err
 	}
-	return  buf.String(), nil
+	return buf.String(), nil
 }
-
