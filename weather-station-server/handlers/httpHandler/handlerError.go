@@ -11,7 +11,7 @@ const (
 	ErrorMessageNotFoundf       = "%v not found"
 	ErrorMessageUnexpectedError = "unexpected error"
 	ErrorMessageInvalidBody     = "invalid body"
-	ErrorMessageParameterf      = "invalid parameter %v"
+	ErrorMessageParameterf      = "invalid value for parameter %v"
 )
 
 type HandlerError struct {

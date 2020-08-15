@@ -30,18 +30,20 @@ func main() {
 	}
 
 	log.Printf("Init Server")
+
 	router := mux.NewRouter()
+
 
 	rand.Seed(time.Now().Unix())
 
 	userHandlers := handlers.GetUserHandlers()
 	nodeHandlers := handlers.GetNodeHandlers()
+	measurementHandlers := handlers.GetMeasurementHandlers()
 
 	router.Path("/nodes").Handler(nodeHandlers.GetFetchNodesHandler()).Methods(http.MethodGet)
 	router.Path("/nodes").Handler(nodeHandlers.GetSaveNodeHandler()).Methods(http.MethodPost)
-	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.PostMeasurementForNodeHandler).Methods(http.MethodPost)
-	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetLastMeasurementsByNodeHandler).Methods(http.MethodGet).Queries("limit", "{[0-9]*?}")
-	router.Path("/nodes/{nodeId}/measurements").HandlerFunc(handlers.GetAllMeasurementsByNodeHandler).Methods(http.MethodGet)
+	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetAddMeasurementHandler()).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetMeasurementsByNodeHandler()).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/share").Handler(httpHandler.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken, handlers.ShareNodeHandler)).Methods(http.MethodPost)
 
@@ -68,9 +70,7 @@ func logRequest(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r)
 	})
 }
-func handlerFuncAppHandler(handler httpHandler.JsonHandler) http.HandlerFunc {
-	return handler.ServeHTTP
-}
+
 func corsHandler(handler http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

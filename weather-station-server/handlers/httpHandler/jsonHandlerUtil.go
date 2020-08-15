@@ -2,8 +2,10 @@ package httpHandler
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func ReadJsonBody(r *http.Request, bodyData interface{}) (err error) {
@@ -19,5 +21,10 @@ func ReadJsonBody(r *http.Request, bodyData interface{}) (err error) {
 		err = BadRequest("Invalid Body", err)
 	}
 
+	return
+}
+func ReadPathVariableInt(r * http.Request, name string)(value int64, err error)  {
+	vars := mux.Vars(r)
+	value, err = strconv.ParseInt(vars[name], 10, 64)
 	return
 }
