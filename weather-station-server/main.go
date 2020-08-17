@@ -4,7 +4,6 @@ import (
 	"de.christophb.wetter/config"
 	"de.christophb.wetter/handlers"
 	"de.christophb.wetter/handlers/httpHandler"
-	"de.christophb.wetter/services"
 	"flag"
 	"github.com/gorilla/mux"
 	"log"
@@ -33,7 +32,6 @@ func main() {
 
 	router := mux.NewRouter()
 
-
 	rand.Seed(time.Now().Unix())
 
 	userHandlers := handlers.GetUserHandlers()
@@ -45,7 +43,7 @@ func main() {
 	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetAddMeasurementHandler()).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetMeasurementsByNodeHandler()).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/share").Handler(httpHandler.AuthorizedAppHandler(services.GetAuthTokenService().VerifyUserAccessToken, handlers.ShareNodeHandler)).Methods(http.MethodPost)
+	router.Path("/nodes/{nodeId}/share").Handler(nodeHandlers.GetShareNodeHandler()).Methods(http.MethodPost)
 
 	router.Path("/users").Handler(userHandlers.GetCreateUserHandler()).Methods(http.MethodPost)
 	router.Path("/users/login").Handler(httpHandler.JsonHandler(handlers.UserAuthenticationHandler)).Methods(http.MethodPost)
