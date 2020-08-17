@@ -141,7 +141,7 @@ func (n nodeHandlersImpl) shareNodeHandler(userId int64, request *http.Request) 
 		Email string `json:"email"`
 	}
 
-	err = readBody(request, &requestBody)
+	err = httpHandler.ReadJsonBody(request, &requestBody)
 	if err != nil {
 		err = httpHandler.InternalError(err)
 		return

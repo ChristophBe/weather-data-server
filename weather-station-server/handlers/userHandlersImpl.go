@@ -41,7 +41,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	defer r.Body.Close()
 
 	if err != nil {
-		err = httpHandler.BadRequest(InvalidBody, err)
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return
 	}
 
@@ -49,12 +49,12 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	var body transitory.UserCreateBody
 	err = json.Unmarshal(b, &body)
 	if err != nil {
-		err = httpHandler.BadRequest(InvalidBody, err)
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return
 	}
 
 	if !body.IsValid() {
-		err = httpHandler.BadRequest(InvalidBody, err)
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	}
 
 	if u.userRepository.HasUserWithUsername(body.Username) || u.userRepository.HasUserWithEmail(body.Email) {
-		err = httpHandler.BadRequest(InvalidBody, nil)
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, nil)
 		return
 	}
 
