@@ -1,4 +1,2 @@
-export const Config= {
-    //apiBaseUrl:"http://wetter.christophb.de/api",
-    apiBaseUrl:"http://localhost:8080",
-};
+
+export const Config = JSON.stringify(process.env.NODE_ENV === 'production' ? require('../config.prod.json') : require('../config.dev.json'))

@@ -30,9 +30,9 @@ func (measuringNodeRepositoryImpl) parseMeasuringNodeFromRecord(record neo4j.Rec
 
 func (measuringNodeRepositoryImpl) castListOfMeasuringNodes(input interface{}) (nodes []models.MeasuringNode) {
 	items := input.([]interface{})
-	nodes = make([]models.MeasuringNode,len(items))
+	nodes = make([]models.MeasuringNode, len(items))
 	for key, x := range items {
-		nodes[key] =x.(models.MeasuringNode)
+		nodes[key] = x.(models.MeasuringNode)
 	}
 	return
 }

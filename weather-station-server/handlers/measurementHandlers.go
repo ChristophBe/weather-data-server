@@ -6,15 +6,15 @@ import (
 	"net/http"
 )
 
-type MeasurementHandlers interface{
+type MeasurementHandlers interface {
 	GetAddMeasurementHandler() http.Handler
 	GetMeasurementsByNodeHandler() http.Handler
 }
 
-func GetMeasurementHandlers()  MeasurementHandlers{
+func GetMeasurementHandlers() MeasurementHandlers {
 	return measurementHandlersImpl{
 		authTokenService:      services.GetAuthTokenService(),
 		measurementRepository: database.GetMeasurementRepository(),
-		nodeRepository: 	   database.GetMeasuringNodeRepository(),
+		nodeRepository:        database.GetMeasuringNodeRepository(),
 	}
 }

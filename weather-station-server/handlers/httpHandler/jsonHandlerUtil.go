@@ -23,7 +23,7 @@ func ReadJsonBody(r *http.Request, bodyData interface{}) (err error) {
 
 	return
 }
-func ReadPathVariableInt(r * http.Request, name string)(value int64, err error)  {
+func ReadPathVariableInt(r *http.Request, name string) (value int64, err error) {
 	vars := mux.Vars(r)
 	value, err = strconv.ParseInt(vars[name], 10, 64)
 	return

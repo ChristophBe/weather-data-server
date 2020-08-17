@@ -60,6 +60,13 @@ class MeasuringComponent extends React.Component {
         }
         const lastMeasurement = items[0];
 
+        const max = items.reduce(function(prev, current) {
+            return (prev.temperature > current.temperature) ? prev : current
+        })
+        const min = items.reduce(function(prev, current) {
+            return (prev.temperature < current.temperature) ? prev : current
+        })
+
         const {temperature,humidity,pressure, timestamp} = lastMeasurement;
 
         const time = moment(timestamp);
@@ -68,8 +75,17 @@ class MeasuringComponent extends React.Component {
         return (
             <div >
                 {node !== undefined ? <h3>{node.name}</h3>: null}
-                <h1>Temperatur: <b>{temperature}°C</b></h1>
-                <div >
+                <h1 className={"mb-1"}>Temperatur: <b>{temperature}°C</b></h1>
+                <div className={"d-flex mb-4"}>
+                    <div className={"mr-2"} title="Höchste Temperatur in den letzten 24h">
+                        Höchste: <b>{max.temperature}°C</b> <span className={"text-nowrap"}>({moment(max.timestamp).format("HH:mm")} Uhr)</span>
+                    </div>
+                    <div  title="Niedrigste Temperatur in den letzten 24h">
+                        Niedrigste: <b>{min.temperature}°C</b> <span className={"text-nowrap"}>({moment(min.timestamp).format("HH:mm")} Uhr)</span>
+                    </div>
+                </div>
+
+                <div>
                     <p>Luftfeuchtigkeit: <b>{humidity}%</b></p>
                     <p>Luftdruck: <b>{pressure}hPa</b></p>
                     <p>Messzeitpunkt: <b>{time.format("DD.MM.YYYY HH:mm")} Uhr</b></p>

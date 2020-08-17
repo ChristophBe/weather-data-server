@@ -13,28 +13,27 @@ import (
 )
 
 type measurementHandlersImpl struct {
-	authTokenService services.AuthTokenService
+	authTokenService      services.AuthTokenService
 	measurementRepository repositories.MeasuringRepository
-	nodeRepository repositories.MeasuringNodeRepository
+	nodeRepository        repositories.MeasuringNodeRepository
 }
 
 func (m measurementHandlersImpl) GetAddMeasurementHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(m.authTokenService.VerifyNodeAccessToken,m.addMeasurementHandler)
+	return httpHandler.AuthorizedAppHandler(m.authTokenService.VerifyNodeAccessToken, m.addMeasurementHandler)
 }
 
 func (m measurementHandlersImpl) GetMeasurementsByNodeHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(m.authTokenService.VerifyUserAccessToken,m.fetchMeasurementsByNodeAuthorized,m.fetchMeasurementsByNodePublic)
+	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(m.authTokenService.VerifyUserAccessToken, m.fetchMeasurementsByNodeAuthorized, m.fetchMeasurementsByNodePublic)
 }
 
 func (m measurementHandlersImpl) addMeasurementHandler(nodeId int64, r *http.Request) (response httpHandler.HandlerResponse, err error) {
 
 	nodeIdPath, err := httpHandler.ReadPathVariableInt(r, "nodeId")
-	if err != nil{
-		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf,"nodeId")
+	if err != nil {
+		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf, "nodeId")
 		err = httpHandler.BadRequest(message, err)
 		return
 	}
-
 
 	if nodeId != nodeIdPath {
 		err = httpHandler.Forbidden(httpHandler.ErrorMessageNotAuthorized, errors.New("authorization is not valid for this node"))
@@ -42,9 +41,9 @@ func (m measurementHandlersImpl) addMeasurementHandler(nodeId int64, r *http.Req
 	}
 
 	var measuring models.Measurement
-	err = httpHandler.ReadJsonBody(r,measuring)
+	err = httpHandler.ReadJsonBody(r, measuring)
 	if err != nil {
-		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody,err)
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return
 	}
 
@@ -79,27 +78,27 @@ func (m measurementHandlersImpl) fetchMeasurementsByNodePublic(r *http.Request) 
 	})
 }
 
-func (m measurementHandlersImpl) fetchMeasurementsByNode(r *http.Request , checkPermission func(node models.MeasuringNode)bool ) (response httpHandler.HandlerResponse, err error) {
+func (m measurementHandlersImpl) fetchMeasurementsByNode(r *http.Request, checkPermission func(node models.MeasuringNode) bool) (response httpHandler.HandlerResponse, err error) {
 
-	nodeId ,err := httpHandler.ReadPathVariableInt(r,"nodeId")
-	if err != nil{
-		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf,"nodeId")
+	nodeId, err := httpHandler.ReadPathVariableInt(r, "nodeId")
+	if err != nil {
+		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf, "nodeId")
 		err = httpHandler.BadRequest(message, err)
 		return
 	}
 
-	node, err:= m.nodeRepository.FetchMeasuringNodeById(nodeId)
-	if err != nil || node.Id != nodeId{
-		message := fmt.Sprintf(httpHandler.ErrorMessageNotFoundf,"node")
-		err = httpHandler.NotFound(message,err)
+	node, err := m.nodeRepository.FetchMeasuringNodeById(nodeId)
+	if err != nil || node.Id != nodeId {
+		message := fmt.Sprintf(httpHandler.ErrorMessageNotFoundf, "node")
+		err = httpHandler.NotFound(message, err)
 	}
 
-	if !checkPermission(node){
-		err = httpHandler.Forbidden(httpHandler.ErrorMessageNotAuthorized,errors.New("user is not authorized for this node"))
+	if !checkPermission(node) {
+		err = httpHandler.Forbidden(httpHandler.ErrorMessageNotAuthorized, errors.New("user is not authorized for this node"))
 		return
 	}
 
-	var measurements = make([]models.Measurement,0)
+	var measurements = make([]models.Measurement, 0)
 
 	limitValue := r.FormValue("limit")
 	if len(limitValue) > 0 {
@@ -107,7 +106,7 @@ func (m measurementHandlersImpl) fetchMeasurementsByNode(r *http.Request , check
 		limit, err = strconv.ParseInt(limitValue, 10, 64)
 
 		if err != nil {
-			message := fmt.Sprintf(httpHandler.ErrorMessageParameterf,"nodeId")
+			message := fmt.Sprintf(httpHandler.ErrorMessageParameterf, "nodeId")
 			err = httpHandler.BadRequest(message, err)
 
 			return

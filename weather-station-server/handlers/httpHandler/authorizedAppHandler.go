@@ -29,7 +29,7 @@ func AuthorizedAppHandlerWithUnauthorisedFallback(
 		sub, err := tokenVerifier(tokenString)
 
 		if err != nil {
-			err =  Forbidden(ErrorMessageNotAuthorized, err)
+			err = Forbidden(ErrorMessageNotAuthorized, err)
 			return
 		}
 
