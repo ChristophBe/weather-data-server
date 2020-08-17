@@ -42,7 +42,7 @@ func main() {
 	router.Path("/nodes").Handler(nodeHandlers.GetSaveNodeHandler()).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetAddMeasurementHandler()).Methods(http.MethodPost)
 	router.Path("/nodes/{nodeId}/measurements").Handler(measurementHandlers.GetMeasurementsByNodeHandler()).Methods(http.MethodGet)
-	router.Path("/nodes/{nodeId}/api-token").HandlerFunc(handlers.GenerateApiCredentialsHandler).Methods(http.MethodGet)
+	router.Path("/nodes/{nodeId}/api-token").Handler(nodeHandlers.GetNodeAuthTokenHandler()).Methods(http.MethodGet)
 	router.Path("/nodes/{nodeId}/share").Handler(nodeHandlers.GetShareNodeHandler()).Methods(http.MethodPost)
 
 	router.Path("/users").Handler(userHandlers.GetCreateUserHandler()).Methods(http.MethodPost)

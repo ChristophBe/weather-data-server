@@ -44,6 +44,10 @@ func (n nodeHandlersImpl) GetShareNodeHandler() http.Handler {
 	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.shareNodeHandler)
 }
 
+func (n nodeHandlersImpl) GetNodeAuthTokenHandler() http.Handler {
+	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.nodeAuthTokenHandler)
+}
+
 func (n nodeHandlersImpl) isValidMeasuringNodes(node models.MeasuringNode) bool {
 	return node.Lat >= -90 && node.Lat <= 90 && node.Lng >= 180 && node.Lng <= -180 && len(node.Name) > 0
 }
@@ -122,17 +126,8 @@ func (n nodeHandlersImpl) saveNodeHandler(userId int64, r *http.Request) (respon
 
 func (n nodeHandlersImpl) shareNodeHandler(userId int64, request *http.Request) (response httpHandler.HandlerResponse, err error) {
 
-	nodeId, err := httpHandler.ReadPathVariableInt(request, "nodeId")
+	node, err := n.getRequestedNode(request)
 	if err != nil {
-		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf, "nodeId")
-		err = httpHandler.BadRequest(message, err)
-		return
-	}
-
-	node, err := n.nodeRepository.FetchMeasuringNodeById(nodeId)
-	if err != nil {
-		message := fmt.Sprintf(httpHandler.ErrorMessageNotFoundf, "node")
-		err = httpHandler.NotFound(message, err)
 		return
 	}
 
@@ -162,5 +157,47 @@ func (n nodeHandlersImpl) shareNodeHandler(userId int64, request *http.Request) 
 		Msg string `json:"message"`
 	}{Msg: "the node was successfully shared"}
 	response.Status = http.StatusOK
+	return
+}
+
+func (n nodeHandlersImpl) nodeAuthTokenHandler(userId int64, r *http.Request) (response httpHandler.HandlerResponse,err  error) {
+
+	node, err := n.getRequestedNode(r)
+	if err != nil {
+		return
+	}
+
+	owner, err := n.userRepository.FetchOwnerByMeasuringNode(node.Id)
+	if err != nil || userId != owner.Id {
+		err = httpHandler.Forbidden(httpHandler.ErrorMessageNotAuthorized, err)
+		return
+	}
+
+	token, err := n.authTokenService.GenerateNodeAccessToken(node)
+	if err!= nil {
+		err = httpHandler.InternalError(err)
+		return
+	}
+
+	response.Data= struct{
+		Token string `json:"token"`
+	}{token}
+	return
+}
+
+func (n nodeHandlersImpl) getRequestedNode(request *http.Request) (node models.MeasuringNode, err error) {
+	nodeId, err := httpHandler.ReadPathVariableInt(request, "nodeId")
+	if err != nil {
+		message := fmt.Sprintf(httpHandler.ErrorMessageParameterf, "nodeId")
+		err = httpHandler.BadRequest(message, err)
+		return
+	}
+
+	node, err = n.nodeRepository.FetchMeasuringNodeById(nodeId)
+	if err != nil {
+		message := fmt.Sprintf(httpHandler.ErrorMessageNotFoundf, "node")
+		err = httpHandler.NotFound(message, err)
+		return
+	}
 	return
 }

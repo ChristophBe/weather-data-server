@@ -9,4 +9,5 @@ type NodeHandlers interface {
 	GetFetchNodesByOwnerHandler() http.Handler
 	GetSaveNodeHandler() http.Handler
 	GetShareNodeHandler() http.Handler
+	GetNodeAuthTokenHandler() http.Handler
 }
