@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data/database"
-	"de.christophb.wetter/services"
+	"github.com/ChristophBe/weather-data-server/data/database"
+	"github.com/ChristophBe/weather-data-server/services"
 	"net/http"
 )
 

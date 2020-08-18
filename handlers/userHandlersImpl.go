@@ -1,15 +1,15 @@
 package handlers
 
 import (
-	"de.christophb.wetter/config"
-	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/data/repositories"
-	"de.christophb.wetter/data/transitory"
-	"de.christophb.wetter/email"
-	"de.christophb.wetter/handlers/httpHandler"
-	"de.christophb.wetter/services"
 	"encoding/json"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/config"
+	"github.com/ChristophBe/weather-data-server/data/models"
+	"github.com/ChristophBe/weather-data-server/data/repositories"
+	"github.com/ChristophBe/weather-data-server/data/transitory"
+	"github.com/ChristophBe/weather-data-server/email"
+	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
+	"github.com/ChristophBe/weather-data-server/services"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"

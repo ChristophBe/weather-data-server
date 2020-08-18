@@ -1,10 +1,10 @@
 package services
 
 import (
-	"de.christophb.wetter/config"
-	"de.christophb.wetter/data/models"
 	"errors"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/config"
+	"github.com/ChristophBe/weather-data-server/data/models"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )

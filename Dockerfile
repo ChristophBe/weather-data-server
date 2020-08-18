@@ -15,10 +15,6 @@ ADD . /app/
 WORKDIR /app
 
 
-RUN go get -u  github.com/gorilla/mux
-RUN go get -u  github.com/johnnadratowski/golang-neo4j-bolt-driver
-RUN go get -u  github.com/neo4j/neo4j-go-driver/neo4j
-RUN go get -u  golang.org/x/crypto/bcrypt
-
+RUN go mod download
 RUN go build  -tags static_all -o main .
 CMD ["/app/main"]

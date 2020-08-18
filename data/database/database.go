@@ -1,8 +1,8 @@
 package database
 
 import (
-	"de.christophb.wetter/config"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/config"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pkg/errors"
 )

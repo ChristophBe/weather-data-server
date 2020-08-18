@@ -1,4 +1,4 @@
-module de.christophb.wetter
+module github.com/ChristophBe/weather-data-server
 
 go 1.13
 

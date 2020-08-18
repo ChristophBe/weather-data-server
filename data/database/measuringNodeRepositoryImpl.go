@@ -1,8 +1,8 @@
 package database
 
 import (
-	"de.christophb.wetter/data/models"
 	"errors"
+	"github.com/ChristophBe/weather-data-server/data/models"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 

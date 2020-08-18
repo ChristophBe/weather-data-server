@@ -1,9 +1,9 @@
 package services
 
 import (
-	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/data/repositories"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/data/models"
+	"github.com/ChristophBe/weather-data-server/data/repositories"
 )
 
 type invitationServiceImpl struct {

@@ -3,8 +3,8 @@ package email
 import (
 	"bytes"
 	"crypto/tls"
-	"de.christophb.wetter/config"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/config"
 	"html/template"
 	"net"
 	"net/mail"

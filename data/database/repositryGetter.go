@@ -1,7 +1,7 @@
 package database
 
 import (
-	"de.christophb.wetter/data/repositories"
+	"github.com/ChristophBe/weather-data-server/data/repositories"
 )
 
 func GetMeasurementRepository() repositories.MeasuringRepository {

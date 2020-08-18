@@ -1,10 +1,10 @@
 package main
 
 import (
-	"de.christophb.wetter/config"
-	"de.christophb.wetter/handlers"
-	"de.christophb.wetter/handlers/httpHandler"
 	"flag"
+	"github.com/ChristophBe/weather-data-server/config"
+	"github.com/ChristophBe/weather-data-server/handlers"
+	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
@@ -14,7 +14,7 @@ import (
 
 func main() {
 
-	configFilePtr := flag.String("config", "config_devel.json", "Path to the Config File")
+	configFilePtr := flag.String("config", "config.json", "Path to the Config File")
 	flag.Parse()
 
 	initializeConfiguration(configFilePtr)

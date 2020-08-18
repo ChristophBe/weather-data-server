@@ -1,8 +1,8 @@
 package services
 
 import (
-	"de.christophb.wetter/data/database"
-	"de.christophb.wetter/data/models"
+	"github.com/ChristophBe/weather-data-server/data/database"
+	"github.com/ChristophBe/weather-data-server/data/models"
 )
 
 type InvitationService interface {

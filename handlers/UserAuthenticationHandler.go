@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data/database"
-	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/handlers/httpHandler"
-	"de.christophb.wetter/services"
 	"errors"
+	"github.com/ChristophBe/weather-data-server/data/database"
+	"github.com/ChristophBe/weather-data-server/data/models"
+	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
+	"github.com/ChristophBe/weather-data-server/services"
 	"log"
 	"net/http"
 	"time"

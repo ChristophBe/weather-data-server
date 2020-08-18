@@ -1,9 +1,9 @@
 package services
 
 import (
-	"de.christophb.wetter/data/database"
-	"de.christophb.wetter/data/models"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/data/database"
+	"github.com/ChristophBe/weather-data-server/data/models"
 )
 
 type InvalidCredentialsError struct{}

@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"de.christophb.wetter/data/database"
-	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/data/repositories"
-	"de.christophb.wetter/handlers/httpHandler"
-	"de.christophb.wetter/services"
 	"fmt"
+	"github.com/ChristophBe/weather-data-server/data/database"
+	"github.com/ChristophBe/weather-data-server/data/models"
+	"github.com/ChristophBe/weather-data-server/data/repositories"
+	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
+	"github.com/ChristophBe/weather-data-server/services"
 	"net/http"
 )
 
@@ -160,7 +160,7 @@ func (n nodeHandlersImpl) shareNodeHandler(userId int64, request *http.Request) 
 	return
 }
 
-func (n nodeHandlersImpl) nodeAuthTokenHandler(userId int64, r *http.Request) (response httpHandler.HandlerResponse,err  error) {
+func (n nodeHandlersImpl) nodeAuthTokenHandler(userId int64, r *http.Request) (response httpHandler.HandlerResponse, err error) {
 
 	node, err := n.getRequestedNode(r)
 	if err != nil {
@@ -174,12 +174,12 @@ func (n nodeHandlersImpl) nodeAuthTokenHandler(userId int64, r *http.Request) (r
 	}
 
 	token, err := n.authTokenService.GenerateNodeAccessToken(node)
-	if err!= nil {
+	if err != nil {
 		err = httpHandler.InternalError(err)
 		return
 	}
 
-	response.Data= struct{
+	response.Data = struct {
 		Token string `json:"token"`
 	}{token}
 	return

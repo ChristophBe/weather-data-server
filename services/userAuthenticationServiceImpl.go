@@ -1,10 +1,10 @@
 package services
 
 import (
-	"de.christophb.wetter/data/models"
-	"de.christophb.wetter/data/repositories"
-	"de.christophb.wetter/handlers/httpHandler"
 	"errors"
+	"github.com/ChristophBe/weather-data-server/data/models"
+	"github.com/ChristophBe/weather-data-server/data/repositories"
+	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"golang.org/x/crypto/bcrypt"
 )
 
