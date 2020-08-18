@@ -1,4 +1,4 @@
-/neo4j**
-/weather-station-server/config**.json
-!/weather-station-server/config_sample.json
-**/.idea
+**.pem
+
+conf**.json
+!config_sample.json
