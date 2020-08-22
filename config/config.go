@@ -24,4 +24,5 @@ type MailConfiguration struct {
 	Password    string `json:"password"`
 	Username    string `json:"username"`
 	MailAddress string `json:"mail_address"`
+	MailName string `json:"mail_name"`
 }

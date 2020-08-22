@@ -1,8 +1,10 @@
 package services
 
+import "net/mail"
+
 type MailService interface {
-	SendeMail(recipientAddress string, recipientName string, msg string)
-	SendHtmlMail(recipientAddress string, recipientName string, templateFile string, templateParams interface{})
+	SendeTxtMail(to mail.Address, subject, msg string) error
+	SendHtmlMail(to mail.Address, subject, templateFile string, templateParams interface{}) error
 }
 
 func GetMailService()  MailService{

@@ -12,6 +12,7 @@ type ShareNodeService interface {
 func GetShareNodeService() ShareNodeService {
 	return shareNodeServiceImpl{
 		authTokenService:     GetAuthTokenService(),
+		mailService: 		  GetMailService(),
 		userRepository:       database.GetUserRepository(),
 		nodeRepository:       database.GetMeasuringNodeRepository(),
 		invitationRepository: database.GetInvitationRepository(),

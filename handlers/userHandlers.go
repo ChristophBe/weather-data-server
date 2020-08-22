@@ -14,6 +14,7 @@ type UserHandlers interface {
 
 func GetUserHandlers() UserHandlers {
 	return userHandlersImpl{
+		mailService:          services.GetMailService(),
 		tokenService:         services.GetAuthTokenService(),
 		invitationService:    services.GetInvitationService(),
 		userRepository:       database.GetUserRepository(),

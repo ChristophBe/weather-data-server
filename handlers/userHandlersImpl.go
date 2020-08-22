@@ -7,18 +7,19 @@ import (
 	"github.com/ChristophBe/weather-data-server/data/models"
 	"github.com/ChristophBe/weather-data-server/data/repositories"
 	"github.com/ChristophBe/weather-data-server/data/transitory"
-	"github.com/ChristophBe/weather-data-server/email"
 	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"github.com/ChristophBe/weather-data-server/services"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/mail"
 	"strings"
 	"time"
 )
 
 type userHandlersImpl struct {
+	mailService          services.MailService
 	tokenService         services.AuthTokenService
 	invitationService    services.InvitationService
 	userRepository       repositories.UserRepository
@@ -97,7 +98,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 	}
 
 	if !user.IsEnabled {
-		go sendEnableToken(user)
+		go u.sendEnableToken(user)
 	}
 
 	go func() {
@@ -117,7 +118,12 @@ func (u userHandlersImpl) enableUser(r *http.Request) (response httpHandler.Hand
 		Token string `json:"token"`
 	}
 
-	httpHandler.ReadJsonBody(r, &body)
+	err = httpHandler.ReadJsonBody(r, &body)
+
+	if err != nil {
+		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
+		return
+	}
 
 	userId, err := u.tokenService.VerifyUserEnableToken(body.Token)
 
@@ -156,7 +162,7 @@ func (u userHandlersImpl) usersMe(userId int64, _ *http.Request) (response httpH
 
 }
 
-func sendEnableToken(user models.User) {
+func  (u userHandlersImpl)  sendEnableToken(user models.User) {
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
@@ -175,7 +181,9 @@ func sendEnableToken(user models.User) {
 		ActivationLink: fmt.Sprintf("%s/users/enable?token=%s ", conf.FrontendBaseUrl, enableToken),
 	}
 
-	err = email.SendHtmlMail(user.Email, "Bestätige deine E-Mail Adresse", "enableMailTemplate.html", params)
+	subject  :="Bestätige deine E-Mail Adresse"
+	err = u.mailService.SendHtmlMail(mail.Address{Address: user.Email},subject,"static/enableMailTemplate.html",params)
+
 
 	if err != nil {
 		log.Fatal(err)
