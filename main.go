@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/ChristophBe/weather-data-server/config"
 	"github.com/ChristophBe/weather-data-server/handlers"
 	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"log"
 	"math/rand"
 	"net/http"
@@ -50,13 +52,19 @@ func main() {
 	router.Path("/users/enable").Handler(userHandlers.GetUserEnableHandler()).Methods(http.MethodPost)
 	router.Path("/users/me").Handler(userHandlers.GetUserMeHandler()).Methods(http.MethodGet)
 	router.Path("/users/{userId}/nodes").Handler(nodeHandlers.GetFetchNodesByOwnerHandler()).Methods(http.MethodGet)
+	
+	port := ":8080"
+	if conf.ServerPort != 0 {
+		port = fmt.Sprintf(":%d",conf.ServerPort)
+	}
 
 	log.Printf("Server started")
-	log.Printf("You can access the Api at http://localhost:8080")
+	log.Printf("You can access the Api at http://localhost%s",port)
 
-	err = http.ListenAndServe(":8080", corsHandler(logRequest(router)))
+	err = http.ListenAndServe(port, corsHandler(logRequest(router)))
 
 	if err != nil {
+		err = errors.Errorf("can not start server cause: %w",err)
 		log.Fatal(err)
 	}
 }

@@ -6,6 +6,7 @@ type Configuration struct {
 	Auth            AuthConfiguration  `json:"auth"`
 	RSAKeyFile      string             `json:"rsa_key_file"`
 	FrontendBaseUrl string             `json:"frontend_base_url"`
+	ServerPort      int 			   `json:"server_port"`
 }
 
 type Neo4jConfiguration struct {

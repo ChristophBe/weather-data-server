@@ -5,6 +5,9 @@
     "username": "",
     "password": ""
   },
+  "auth": {
+    "auth_key": ""
+  },
   "mail": {
     "server": "",
     "server_port": 0,
@@ -12,6 +15,7 @@
     "password": "",
     "mail_address": ""
   },
-  "frontend_base_url": ""
+  "frontend_base_url": "",
+  "server_port": 0
 }
 
