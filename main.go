@@ -20,12 +20,7 @@ func main() {
 	flag.Parse()
 
 	initializeConfiguration(configFilePtr)
-
 	conf, err := config.GetConfigManager().GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = config.GetKeyHolder().LoadKeys(conf.RSAKeyFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +47,13 @@ func main() {
 	router.Path("/users/enable").Handler(userHandlers.GetUserEnableHandler()).Methods(http.MethodPost)
 	router.Path("/users/me").Handler(userHandlers.GetUserMeHandler()).Methods(http.MethodGet)
 	router.Path("/users/{userId}/nodes").Handler(nodeHandlers.GetFetchNodesByOwnerHandler()).Methods(http.MethodGet)
-	
+
+	conf, err := config.GetConfigManager().GetConfig()
+	if err != nil {
+		log.Fatal(errors.Errorf("can not load config; cause: %w",err))
+	}
+
+
 	port := ":8080"
 	if conf.ServerPort != 0 {
 		port = fmt.Sprintf(":%d",conf.ServerPort)
