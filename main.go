@@ -20,10 +20,6 @@ func main() {
 	flag.Parse()
 
 	initializeConfiguration(configFilePtr)
-	conf, err := config.GetConfigManager().GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	log.Printf("Init Server")
 
