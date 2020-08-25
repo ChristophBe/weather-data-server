@@ -24,7 +24,7 @@ func (fn JsonHandler) catchErrors(w http.ResponseWriter, r *http.Request) {
 	handlerError, ok := recovered.(HandlerError)
 	if ok {
 		fn.Error(w, handlerError.Message, handlerError.StatusCode)
-		log.Printf("Request failed: {url: %s,methonde:%s, message:%s,status: %d, cause:%v", r.URL, r.Method, handlerError.Message, handlerError.StatusCode, handlerError.Cause)
+		log.Printf("Request failed {url: %s, method: %s, message: %s,status: %d, cause: %v}", r.URL, r.Method, handlerError.Message, handlerError.StatusCode, handlerError.Cause)
 		return
 	}
 
