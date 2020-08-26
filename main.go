@@ -1,13 +1,13 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/ChristophBe/weather-data-server/config"
 	"github.com/ChristophBe/weather-data-server/handlers"
 	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"log"
 	"math/rand"
 	"net/http"

@@ -1,10 +1,10 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ChristophBe/weather-data-server/config"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"github.com/pkg/errors"
 )
 
 func createDriver() (driver neo4j.Driver, err error) {
