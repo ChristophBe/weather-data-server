@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/ChristophBe/weather-data-server/config"
@@ -46,7 +45,7 @@ func main() {
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
-		log.Fatal(errors.Errorf("can not load config; cause: %w",err))
+		log.Fatal(fmt.Errorf("can not load config; cause: %w",err))
 	}
 
 
@@ -61,7 +60,7 @@ func main() {
 	err = http.ListenAndServe(port, corsHandler(logRequest(router)))
 
 	if err != nil {
-		err = errors.Errorf("can not start server cause: %w",err)
+		err = fmt.Errorf("can not start server cause: %w",err)
 		log.Fatal(err)
 	}
 }
