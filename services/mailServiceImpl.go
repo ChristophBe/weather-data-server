@@ -11,14 +11,14 @@ import (
 	"net/smtp"
 )
 
-type mailServiceImpl struct {}
+type mailServiceImpl struct{}
 
-func (m mailServiceImpl) SendeTxtMail(to mail.Address, subject, messageContent string) error{
+func (m mailServiceImpl) SendeTxtMail(to mail.Address, subject, messageContent string) error {
 	headers, err := m.createHeader(to, subject)
 	if err != nil {
 		return err
 	}
-	return m.sendMail(to,headers, messageContent)
+	return m.sendMail(to, headers, messageContent)
 }
 
 func (m mailServiceImpl) SendHtmlMail(to mail.Address, subject, templateFile string, templateParams interface{}) error {
@@ -34,11 +34,10 @@ func (m mailServiceImpl) SendHtmlMail(to mail.Address, subject, templateFile str
 	headers["MIME-version"] = "1.0"
 	headers["Content-Type"] = "text/html; charset=\"UTF-8\""
 
-	return m.sendMail(to,headers, html)
+	return m.sendMail(to, headers, html)
 }
 
-
-func (m mailServiceImpl) createHeader(to mail.Address, subject string) (headers map[string]string , err error) {
+func (m mailServiceImpl) createHeader(to mail.Address, subject string) (headers map[string]string, err error) {
 
 	conf, err := config.GetConfigManager().GetConfig()
 
@@ -57,7 +56,7 @@ func (m mailServiceImpl) createHeader(to mail.Address, subject string) (headers 
 	headers["Subject"] = subject
 	return
 }
-func (m mailServiceImpl) sendMail(to mail.Address,headers map[string]string, mailContent string) error {
+func (m mailServiceImpl) sendMail(to mail.Address, headers map[string]string, mailContent string) error {
 
 	conf, err := config.GetConfigManager().GetConfig()
 
@@ -134,18 +133,16 @@ func (m mailServiceImpl) buildMailData(headers map[string]string, mailContent st
 	return message
 }
 
-
-func (m mailServiceImpl) handleMailTemplate(templateFileName string, templateParameters interface{}) (htmlString string,err error) {
+func (m mailServiceImpl) handleMailTemplate(templateFileName string, templateParameters interface{}) (htmlString string, err error) {
 	t, err := template.ParseFiles(templateFileName)
 	if err != nil {
 		return
 	}
 	buf := new(bytes.Buffer)
 	err = t.Execute(buf, templateParameters)
-	if  err != nil {
+	if err != nil {
 		return
 	}
 	htmlString = buf.String()
 	return
 }
-

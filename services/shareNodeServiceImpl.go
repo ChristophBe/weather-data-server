@@ -19,7 +19,7 @@ type shareMailParams struct {
 
 type shareNodeServiceImpl struct {
 	authTokenService     AuthTokenService
-	mailService 		 MailService
+	mailService          MailService
 	userRepository       repositories.UserRepository
 	nodeRepository       repositories.MeasuringNodeRepository
 	invitationRepository repositories.InvitationRepository
@@ -101,9 +101,9 @@ func (s shareNodeServiceImpl) handleInvitationForNewUser(node models.MeasuringNo
 }
 
 func (s shareNodeServiceImpl) sendShareMail(recipient string, params shareMailParams) {
-	subject :=fmt.Sprintf( "Die Wetterstation \"%s\" wurde mit dir geteilt.",params.NodeName)
+	subject := fmt.Sprintf("Die Wetterstation \"%s\" wurde mit dir geteilt.", params.NodeName)
 	to := mail.Address{Address: recipient}
-	err := s.mailService.SendHtmlMail(to,subject,"static/shareNodeMailTemplate.html", params)
+	err := s.mailService.SendHtmlMail(to, subject, "static/shareNodeMailTemplate.html", params)
 
 	if err != nil {
 		log.Fatal(err)

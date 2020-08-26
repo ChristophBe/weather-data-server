@@ -7,6 +7,6 @@ type MailService interface {
 	SendHtmlMail(to mail.Address, subject, templateFile string, templateParams interface{}) error
 }
 
-func GetMailService()  MailService{
+func GetMailService() MailService {
 	return mailServiceImpl{}
 }

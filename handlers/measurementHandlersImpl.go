@@ -41,7 +41,7 @@ func (m measurementHandlersImpl) addMeasurementHandler(nodeId int64, r *http.Req
 	}
 
 	var measuring models.Measurement
-	err = httpHandler.ReadJsonBody(r, measuring)
+	err = httpHandler.ReadJsonBody(r, &measuring)
 	if err != nil {
 		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return

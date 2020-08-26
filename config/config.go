@@ -6,7 +6,7 @@ type Configuration struct {
 	Auth            AuthConfiguration  `json:"auth"`
 	RSAKeyFile      string             `json:"rsa_key_file"`
 	FrontendBaseUrl string             `json:"frontend_base_url"`
-	ServerPort      int 			   `json:"server_port"`
+	ServerPort      int                `json:"server_port"`
 }
 
 type Neo4jConfiguration struct {
@@ -25,5 +25,5 @@ type MailConfiguration struct {
 	Password    string `json:"password"`
 	Username    string `json:"username"`
 	MailAddress string `json:"mail_address"`
-	MailName string `json:"mail_name"`
+	MailName    string `json:"mail_name"`
 }

@@ -14,7 +14,6 @@ type AuthTokenService interface {
 	GenerateUserAccessToken(user models.User) (string, error)
 	GenerateUserRefreshToken(user models.User) (string, error)
 	GenerateNodeAccessToken(node models.MeasuringNode) (string, error)
-
 	GenerateUserInvitationToken(invitation models.Invitation) (string, error)
 	GenerateUserEnableToken(user models.User) (string, error)
 	VerifyUserAccessToken(token string) (int64, error)

@@ -162,7 +162,7 @@ func (u userHandlersImpl) usersMe(userId int64, _ *http.Request) (response httpH
 
 }
 
-func  (u userHandlersImpl)  sendEnableToken(user models.User) {
+func (u userHandlersImpl) sendEnableToken(user models.User) {
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
@@ -181,9 +181,8 @@ func  (u userHandlersImpl)  sendEnableToken(user models.User) {
 		ActivationLink: fmt.Sprintf("%s/users/enable?token=%s ", conf.FrontendBaseUrl, enableToken),
 	}
 
-	subject  :="Bestätige deine E-Mail Adresse"
-	err = u.mailService.SendHtmlMail(mail.Address{Address: user.Email},subject,"static/enableMailTemplate.html",params)
-
+	subject := "Bestätige deine E-Mail Adresse"
+	err = u.mailService.SendHtmlMail(mail.Address{Address: user.Email}, subject, "static/enableMailTemplate.html", params)
 
 	if err != nil {
 		log.Fatal(err)

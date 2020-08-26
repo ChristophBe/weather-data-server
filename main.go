@@ -45,22 +45,21 @@ func main() {
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
-		log.Fatal(fmt.Errorf("can not load config; cause: %w",err))
+		log.Fatal(fmt.Errorf("can not load config; cause: %w", err))
 	}
-
 
 	port := ":8080"
 	if conf.ServerPort != 0 {
-		port = fmt.Sprintf(":%d",conf.ServerPort)
+		port = fmt.Sprintf(":%d", conf.ServerPort)
 	}
 
 	log.Printf("Server started")
-	log.Printf("You can access the Api at http://localhost%s",port)
+	log.Printf("You can access the Api at http://localhost%s", port)
 
 	err = http.ListenAndServe(port, corsHandler(logRequest(router)))
 
 	if err != nil {
-		err = fmt.Errorf("can not start server cause: %w",err)
+		err = fmt.Errorf("can not start server cause: %w", err)
 		log.Fatal(err)
 	}
 }
