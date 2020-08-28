@@ -9,45 +9,19 @@ import (
 	"time"
 )
 
-type tokenType int
-
-const (
-	USER_AUTH tokenType = iota
-	USER_REFRESH
-	USER_INVITATION
-	USER_ENABLE
-	NODE_AUTH
-)
-
-func (t tokenType) toString() string {
-
-	tokenTypeToString := map[tokenType]string{
-		USER_AUTH:       "USER_AUTH",
-		USER_REFRESH:    "USER_REFRESH",
-		USER_INVITATION: "USER_INVITATION",
-		USER_ENABLE:     "USER_ENABLE",
-		NODE_AUTH:       "NODE_AUTH",
-	}
-	return tokenTypeToString[t]
-}
-func tokenTypeByString(typeString string) (tokenType, error) {
-	stringToTokenType := map[string]tokenType{
-		"USER_AUTH":       USER_AUTH,
-		"USER_REFRESH":    USER_REFRESH,
-		"USER_INVITATION": USER_INVITATION,
-		"USER_ENABLE":     USER_ENABLE,
-		"NODE_AUTH":       NODE_AUTH,
-	}
-	return stringToTokenType[typeString], nil
-}
 
 type authTokenContext struct {
-	Type     tokenType
+	Type     TokenType
 	Expiring time.Duration
 	Sub      int64
 }
 
-type authTokenServiceImpl struct {
+type authTokenServiceImpl struct {}
+
+func (a authTokenServiceImpl) GetTokenVerifier(tokenTyp TokenType) func(token string) (int64, error) {
+	return func(token string) (int64, error) {
+		return a.verifyToken(token, tokenTyp)
+	}
 }
 
 func (a authTokenServiceImpl) GenerateUserAccessToken(user models.User) (signedToken string, err error) {
@@ -100,26 +74,6 @@ func (a authTokenServiceImpl) GenerateUserEnableToken(user models.User) (signedT
 	return
 }
 
-func (a authTokenServiceImpl) VerifyUserAccessToken(token string) (int64, error) {
-	return a.verifyToken(token, USER_AUTH)
-}
-
-func (a authTokenServiceImpl) VerifyUserRefreshToken(token string) (int64, error) {
-	return a.verifyToken(token, USER_REFRESH)
-}
-
-func (a authTokenServiceImpl) VerifyNodeAccessToken(token string) (int64, error) {
-	return a.verifyToken(token, NODE_AUTH)
-}
-
-func (a authTokenServiceImpl) VerifyUserInvitationToken(token string) (int64, error) {
-	return a.verifyToken(token, USER_INVITATION)
-}
-
-func (a authTokenServiceImpl) VerifyUserEnableToken(token string) (int64, error) {
-	return a.verifyToken(token, USER_ENABLE)
-}
-
 func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedToken string, err error) {
 	expirationTime := time.Now().Add(context.Expiring)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -136,7 +90,7 @@ func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedTok
 	return
 }
 
-func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType tokenType) (sub int64, err error) {
+func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType TokenType) (sub int64, err error) {
 	conf, err := config.GetConfigManager().GetConfig()
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -152,7 +106,7 @@ func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType token
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		var tokenType tokenType
+		var tokenType TokenType
 
 		//Check if Token Type is Valid
 		tokenType, err = tokenTypeByString(claims["type"].(string))

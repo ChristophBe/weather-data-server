@@ -19,11 +19,11 @@ type measurementHandlersImpl struct {
 }
 
 func (m measurementHandlersImpl) GetAddMeasurementHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(m.authTokenService.VerifyNodeAccessToken, m.addMeasurementHandler)
+	return httpHandler.AuthorizedAppHandler(m.authTokenService.GetTokenVerifier(services.NODE_AUTH), m.addMeasurementHandler)
 }
 
 func (m measurementHandlersImpl) GetMeasurementsByNodeHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(m.authTokenService.VerifyUserAccessToken, m.fetchMeasurementsByNodeAuthorized, m.fetchMeasurementsByNodePublic)
+	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(m.authTokenService.GetTokenVerifier(services.USER_AUTH), m.fetchMeasurementsByNodeAuthorized, m.fetchMeasurementsByNodePublic)
 }
 
 func (m measurementHandlersImpl) addMeasurementHandler(nodeId int64, r *http.Request) (response httpHandler.HandlerResponse, err error) {

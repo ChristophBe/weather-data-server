@@ -31,7 +31,7 @@ func (u userHandlersImpl) GetCreateUserHandler() http.Handler {
 }
 
 func (u userHandlersImpl) GetUserMeHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(u.tokenService.VerifyUserAccessToken, u.usersMe)
+	return httpHandler.AuthorizedAppHandler(u.tokenService.GetTokenVerifier(services.USER_AUTH), u.usersMe)
 }
 func (u userHandlersImpl) GetUserEnableHandler() http.Handler {
 	return httpHandler.JsonHandler(u.enableUser)
@@ -59,7 +59,7 @@ func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.Hand
 		return
 	}
 
-	invitationId, err := u.tokenService.VerifyUserInvitationToken(body.InvitationToken)
+	invitationId, err := u.tokenService.GetTokenVerifier(services.USER_INVITATION)(body.InvitationToken)
 	if err != nil {
 		err = httpHandler.BadRequest("invalid invitation_token", err)
 		return
@@ -125,7 +125,7 @@ func (u userHandlersImpl) enableUser(r *http.Request) (response httpHandler.Hand
 		return
 	}
 
-	userId, err := u.tokenService.VerifyUserEnableToken(body.Token)
+	userId, err := u.tokenService.GetTokenVerifier(services.USER_ENABLE)(body.Token)
 
 	if err != nil {
 		err = httpHandler.BadRequest("invalid token", err)

@@ -29,23 +29,23 @@ func GetNodeHandlers() NodeHandlers {
 }
 
 func (n nodeHandlersImpl) GetFetchNodesHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(n.authTokenService.VerifyUserAccessToken, n.fetchNodesHandlerAuthorized, n.fetchNodesHandlerUnauthorized)
+	return httpHandler.AuthorizedAppHandlerWithUnauthorisedFallback(n.authTokenService.GetTokenVerifier(services.USER_AUTH), n.fetchNodesHandlerAuthorized, n.fetchNodesHandlerUnauthorized)
 }
 
 func (n nodeHandlersImpl) GetFetchNodesByOwnerHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.fetchNodesByOwnerHandler)
+	return httpHandler.AuthorizedAppHandler(n.authTokenService.GetTokenVerifier(services.USER_AUTH), n.fetchNodesByOwnerHandler)
 }
 
 func (n nodeHandlersImpl) GetSaveNodeHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.saveNodeHandler)
+	return httpHandler.AuthorizedAppHandler(n.authTokenService.GetTokenVerifier(services.USER_AUTH), n.saveNodeHandler)
 }
 
 func (n nodeHandlersImpl) GetShareNodeHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.shareNodeHandler)
+	return httpHandler.AuthorizedAppHandler(n.authTokenService.GetTokenVerifier(services.USER_AUTH), n.shareNodeHandler)
 }
 
 func (n nodeHandlersImpl) GetNodeAuthTokenHandler() http.Handler {
-	return httpHandler.AuthorizedAppHandler(n.authTokenService.VerifyUserAccessToken, n.nodeAuthTokenHandler)
+	return httpHandler.AuthorizedAppHandler(n.authTokenService.GetTokenVerifier(services.USER_AUTH), n.nodeAuthTokenHandler)
 }
 
 func (n nodeHandlersImpl) isValidMeasuringNodes(node models.MeasuringNode) bool {
