@@ -19,12 +19,6 @@ type MeasuringNode struct {
 	IsOutdoors bool    `json:"is_outdoors"`
 }
 
-type NodeAuthToken struct {
-	Id           int64
-	TokenHash    []byte
-	CreationTime time.Time
-}
-
 type User struct {
 	Id               int64     `json:"id"`
 	LastLogin        time.Time `json:"last-login"`

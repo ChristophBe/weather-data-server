@@ -7,10 +7,6 @@ import (
 func GetMeasurementRepository() repositories.MeasuringRepository {
 	return measuringRepositoryImpl{}
 }
-func GetNodeAuthTokenRepository() repositories.NodeAuthTokenRepository {
-	return nodeAuthTokenRepositoryIml{}
-}
-
 func GetMeasuringNodeRepository() repositories.MeasuringNodeRepository {
 	return measuringNodeRepositoryImpl{}
 }

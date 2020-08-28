@@ -21,11 +21,6 @@ type MeasuringNodeRepository interface {
 	CreateAuthorisationRelation(node models.MeasuringNode, user models.User) error
 }
 
-type NodeAuthTokenRepository interface {
-	InsertNodeAuthToken(nodeId int64, token models.NodeAuthToken) (models.NodeAuthToken, error)
-	FetchAuthTokenByNodeId(nodeId int64) (models.NodeAuthToken, error)
-}
-
 type UserRepository interface {
 	SaveUser(user models.User) (models.User, error)
 	FetchUserById(userId int64) (models.User, error)
