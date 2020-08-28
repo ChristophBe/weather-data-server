@@ -33,7 +33,7 @@ func (r nodeAuthTokenRepositoryIml) InsertNodeAuthToken(nodeId int64, token mode
 		"nodeId":       nodeId,
 	}
 
-	stmt := "MATCH (n:MeasuringNode)  WHERE Id(n) = {nodeId} CREATE (n)<-[:AUTH_TOKEN_FOR]-(m:NodeAuthToken {creationTime: {creationTime}, tokenHash: {tokenHash}}) RETURN t"
+	stmt := "MATCH (n:MeasuringNode)  WHERE Id(n) = $nodeId CREATE (n)<-[:AUTH_TOKEN_FOR]-(m:NodeAuthToken {creationTime: $creationTime, tokenHash: $tokenHash}) RETURN t"
 
 	res, err := doWriteTransaction(stmt, params, parseSingleItemFromResult(r.tokenResultHandler))
 
@@ -47,7 +47,7 @@ func (r nodeAuthTokenRepositoryIml) InsertNodeAuthToken(nodeId int64, token mode
 func (r nodeAuthTokenRepositoryIml) FetchAuthTokenByNodeId(nodeId int64) (token models.NodeAuthToken, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
 
-	stmt := "MATCH (t:NodeAuthToken)-[:AUTH_TOKEN_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN t"
+	stmt := "MATCH (t:NodeAuthToken)-[:AUTH_TOKEN_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN t"
 
 	res, err := doWriteTransaction(stmt, params, parseSingleItemFromResult(r.tokenResultHandler))
 

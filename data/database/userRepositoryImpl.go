@@ -47,8 +47,8 @@ func (u userRepositoryImpl) SaveUser(user models.User) (savedUser models.User, e
 		params["id"] = user.Id
 	}
 
-	insertUserStatement := "CREATE (u:User {lastLogin: {lastLogin}, creationTime: {creationTime},email: {email},username: {username},isEnabled: {isEnabled},enableSecretHash: {enableSecretHash}, passwordHash: {passwordHash}}) RETURN u"
-	updateUserStatement := "Match (u:User) WHERE id(u) = {id} SET u.lastLogin = {lastLogin}, u.isEnabled = {isEnabled},u.username = {username}, u.passwordHash = {passwordHash} RETURN u"
+	insertUserStatement := "CREATE (u:User {lastLogin: $lastLogin, creationTime: $creationTime,email: $email,username: $username,isEnabled: $isEnabled,enableSecretHash: $enableSecretHash, passwordHash: $passwordHash}) RETURN u"
+	updateUserStatement := "Match (u:User) WHERE id(u) = $id SET u.lastLogin = $lastLogin, u.isEnabled = $isEnabled,u.username = $username, u.passwordHash = $passwordHash RETURN u"
 
 	result, err := saveNode(insertUserStatement, updateUserStatement, params, parseSingleItemFromResult(u.parseUserFormRecord))
 
@@ -61,7 +61,7 @@ func (u userRepositoryImpl) SaveUser(user models.User) (savedUser models.User, e
 
 func (u userRepositoryImpl) FetchUserById(userId int64) (user models.User, err error) {
 	params := map[string]interface{}{"userId": userId}
-	stmt := "MATCH (u:User) where id(u)={userId} return u"
+	stmt := "MATCH (u:User) where id(u)=$userId return u"
 	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil {
 		return
@@ -72,7 +72,7 @@ func (u userRepositoryImpl) FetchUserById(userId int64) (user models.User, err e
 
 func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user models.User, err error) {
 	params := map[string]interface{}{"nodeId": nodeId}
-	stmt := "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = {nodeId} RETURN u"
+	stmt := "MATCH (u:User)-[:OWNER]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN u"
 	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil {
 		return
@@ -83,7 +83,7 @@ func (u userRepositoryImpl) FetchOwnerByMeasuringNode(nodeId int64) (user models
 
 func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, err error) {
 	params := map[string]interface{}{"email": email}
-	stmt := "MATCH (u:User) WHERE u.email = {email} RETURN u"
+	stmt := "MATCH (u:User) WHERE u.email = $email RETURN u"
 	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil {
 		return
@@ -94,7 +94,7 @@ func (u userRepositoryImpl) FetchUserByEmail(email string) (user models.User, er
 
 func (u userRepositoryImpl) FetchUserByUsername(username string) (user models.User, err error) {
 	params := map[string]interface{}{"username": username}
-	stmt := "MATCH (u:User) WHERE u.username = {username} RETURN u"
+	stmt := "MATCH (u:User) WHERE u.username = $username RETURN u"
 	res, err := doReadTransaction(stmt, params, parseSingleItemFromResult(u.parseUserFormRecord))
 	if err != nil {
 		return

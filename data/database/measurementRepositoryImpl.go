@@ -10,9 +10,9 @@ import (
 type measuringRepositoryImpl struct{}
 
 const (
-	createMeasurementStatement              = "MATCH (n:MeasuringNode)  WHERE Id(n) = {stationId} CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measurement {timeStamp: {timeStamp}, pressure: {pressure},temperature: {temperature},humidity: {humidity}}) RETURN m"
-	fetchAllMeasuringsForNodeStmt           = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId}  RETURN m ORDER BY m.timeStamp DESC"
-	fetchMeasuringForNodeAfterTimestampStmt = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = {nodeId} and m.timeStamp > {minTime} RETURN m ORDER BY m.timeStamp DESC"
+	createMeasurementStatement              = "MATCH (n:MeasuringNode)  WHERE Id(n) = $stationId CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measurement {timeStamp: $timeStamp, pressure: $pressure,temperature: $temperature,humidity: $humidity}) RETURN m"
+	fetchAllMeasuringsForNodeStmt           = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN m ORDER BY m.timeStamp DESC"
+	fetchMeasuringForNodeAfterTimestampStmt = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = nodeId and m.timeStamp > $minTime RETURN m ORDER BY m.timeStamp DESC"
 )
 
 func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (interface{}, error) {
