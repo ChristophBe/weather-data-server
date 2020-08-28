@@ -1,9 +1,9 @@
-package testing
+package testutils
 
 import (
+	"fmt"
 	"github.com/ChristophBe/weather-data-server/data/database"
 	"github.com/ChristophBe/weather-data-server/data/models"
-	"golang.org/x/tools/go/ssa/interp/testdata/src/fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -13,7 +13,7 @@ func GetSavedMeasuringNode(t *testing.T) (models.MeasuringNode, models.User)  {
 
 	node:= models.MeasuringNode{
 
-		Name:       generateRandomString(),
+		Name:       generateRandomString(10),
 		Lat:        rand.Float64(),
 		Lng:        rand.Float64(),
 		IsPublic:   false,
