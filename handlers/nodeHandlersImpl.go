@@ -49,7 +49,7 @@ func (n nodeHandlersImpl) GetNodeAuthTokenHandler() http.Handler {
 }
 
 func (n nodeHandlersImpl) isValidMeasuringNodes(node models.MeasuringNode) bool {
-	return node.Lat >= -90 && node.Lat <= 90 && node.Lng >= 180 && node.Lng <= -180 && len(node.Name) > 0
+	return node.Lat >= -90 && node.Lat <= 90 && node.Lng >= -180 && node.Lng <= 180 && len(node.Name) > 0
 }
 
 func (n nodeHandlersImpl) fetchNodesHandlerAuthorized(userId int64, r *http.Request) (response httpHandler.HandlerResponse, err error) {
