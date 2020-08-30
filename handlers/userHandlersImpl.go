@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ChristophBe/weather-data-server/config"
 	"github.com/ChristophBe/weather-data-server/data/models"
@@ -10,7 +9,6 @@ import (
 	"github.com/ChristophBe/weather-data-server/handlers/httpHandler"
 	"github.com/ChristophBe/weather-data-server/services"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/mail"
@@ -38,23 +36,10 @@ func (u userHandlersImpl) GetUserEnableHandler() http.Handler {
 }
 
 func (u userHandlersImpl) createUser(r *http.Request) (response httpHandler.HandlerResponse, err error) {
-	b, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
 
-	if err != nil {
-		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
-		return
-	}
-
-	// Unmarshal
 	var body transitory.UserCreateBody
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
-		return
-	}
-
-	if !body.IsValid() {
+	err = httpHandler.ReadJsonBody(r, &body)
+	if err != nil || !body.IsValid()  {
 		err = httpHandler.BadRequest(httpHandler.ErrorMessageInvalidBody, err)
 		return
 	}
