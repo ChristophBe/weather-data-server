@@ -9,12 +9,6 @@ import (
 
 type measuringRepositoryImpl struct{}
 
-const (
-	createMeasurementStatement              = "MATCH (n:MeasuringNode)  WHERE Id(n) = $stationId CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measurement {timeStamp: $timeStamp, pressure: $pressure,temperature: $temperature,humidity: $humidity}) RETURN m"
-	fetchAllMeasuringsForNodeStmt           = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN m ORDER BY m.timeStamp DESC"
-	fetchMeasuringForNodeAfterTimestampStmt = "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = nodeId and m.timeStamp > $minTime RETURN m ORDER BY m.timeStamp DESC"
-)
-
 func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (interface{}, error) {
 
 	nodeData, ok := record.Get("m")
@@ -35,12 +29,16 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 	return measurement, nil
 }
 
-func (measuringRepositoryImpl) castResultList(input interface{}) (measurings []models.Measurement) {
+func (measuringRepositoryImpl) castResultList(input interface{}) (measurements []models.Measurement) {
+	if input == nil {
+		measurements = make([]models.Measurement, 0)
+		return
+	}
 	items := input.([]interface{})
-	measurings = make([]models.Measurement, len(items))
+	measurements = make([]models.Measurement, len(items))
 
 	for key, item := range items {
-		measurings[key] = item.(models.Measurement)
+		measurements[key] = item.(models.Measurement)
 	}
 	return
 }
@@ -54,7 +52,8 @@ func (r measuringRepositoryImpl) CreateMeasurement(stationId int64, measurement 
 		"stationId":   stationId,
 	}
 
-	res, err := doWriteTransaction(createMeasurementStatement, params, parseSingleItemFromResult(r.measuringResultHandler))
+	stmt := "MATCH (n:MeasuringNode)  WHERE Id(n) = $stationId CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measurement {timeStamp: $timeStamp, pressure: $pressure,temperature: $temperature,humidity: $humidity}) RETURN m"
+	res, err := doWriteTransaction(stmt, params, parseSingleItemFromResult(r.measuringResultHandler))
 
 	if err != nil {
 		return
@@ -68,7 +67,8 @@ func (r measuringRepositoryImpl) FetchAllMeasuringsByNodeId(nodeId int64) (measu
 
 	params := map[string]interface{}{"nodeId": nodeId}
 
-	results, err := doReadTransaction(fetchAllMeasuringsForNodeStmt, params, parseListFromResult(r.measuringResultHandler))
+	stmt:= "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN m ORDER BY m.timeStamp DESC"
+	results, err := doReadTransaction(stmt, params, parseListFromResult(r.measuringResultHandler))
 
 	measurements = r.castResultList(results)
 	return
@@ -79,7 +79,9 @@ func (r measuringRepositoryImpl) FetchLastMeasuringsByNodeId(nodeId int64, hours
 	minTime := time.Now().Add(time.Duration(-hours) * time.Hour)
 	params := map[string]interface{}{"nodeId": nodeId, "minTime": minTime.Unix()}
 
-	results, err := doReadTransaction(fetchMeasuringForNodeAfterTimestampStmt, params, parseListFromResult(r.measuringResultHandler))
+	stmt:= "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId and m.timeStamp > $minTime RETURN m ORDER BY m.timeStamp DESC"
+
+	results, err := doReadTransaction(stmt, params, parseListFromResult(r.measuringResultHandler))
 
 	measurements = r.castResultList(results)
 	return
