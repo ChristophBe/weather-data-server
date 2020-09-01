@@ -21,8 +21,8 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 	measurement := models.Measurement{
 		Id:          node.Id(),
 		TimeStamp:   parseTimeProp(props["timeStamp"], time.Unix(0, 0)),
-		Temperature: parseFloatProp(props["pressure"], .0),
-		Humidity:    parseFloatProp(props["temperature"], .0),
+		Temperature: parseFloatProp(props["temperature"], .0),
+		Humidity:    parseFloatProp(props["pressure"], .0),
 		Pressure:    parseFloatProp(props["humidity"], .0),
 	}
 
@@ -52,7 +52,7 @@ func (r measuringRepositoryImpl) CreateMeasurement(stationId int64, measurement 
 		"stationId":   stationId,
 	}
 
-	stmt := "MATCH (n:MeasuringNode)  WHERE Id(n) = $stationId CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measurement {timeStamp: $timeStamp, pressure: $pressure,temperature: $temperature,humidity: $humidity}) RETURN m"
+	stmt := "MATCH (n:MeasuringNode)  WHERE Id(n) = $stationId CREATE (n)<-[:MEASUREMENT_FOR]-(m:Measuring {timeStamp: $timeStamp, pressure: $pressure,temperature: $temperature,humidity: $humidity}) RETURN m"
 	res, err := doWriteTransaction(stmt, params, parseSingleItemFromResult(r.measuringResultHandler))
 
 	if err != nil {
@@ -67,7 +67,7 @@ func (r measuringRepositoryImpl) FetchAllMeasuringsByNodeId(nodeId int64) (measu
 
 	params := map[string]interface{}{"nodeId": nodeId}
 
-	stmt:= "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN m ORDER BY m.timeStamp DESC"
+	stmt:= "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId RETURN m ORDER BY m.timeStamp DESC"
 	results, err := doReadTransaction(stmt, params, parseListFromResult(r.measuringResultHandler))
 
 	measurements = r.castResultList(results)
@@ -79,7 +79,7 @@ func (r measuringRepositoryImpl) FetchLastMeasuringsByNodeId(nodeId int64, hours
 	minTime := time.Now().Add(time.Duration(-hours) * time.Hour)
 	params := map[string]interface{}{"nodeId": nodeId, "minTime": minTime.Unix()}
 
-	stmt:= "MATCH (m:Measurement)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId and m.timeStamp > $minTime RETURN m ORDER BY m.timeStamp DESC"
+	stmt:= "MATCH (m:Measuring)-[:MEASUREMENT_FOR]->(n:MeasuringNode) WHERE id(n) = $nodeId and m.timeStamp > $minTime RETURN m ORDER BY m.timeStamp DESC"
 
 	results, err := doReadTransaction(stmt, params, parseListFromResult(r.measuringResultHandler))
 
