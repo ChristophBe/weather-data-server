@@ -52,7 +52,7 @@ func (ua userAuthenticationServiceImpl) refreshTokenGrant(credentials AuthCreden
 		return
 	}
 
-	userTokenVerifier := ua.authTokenService.GetTokenVerifier(USER_AUTH)
+	userTokenVerifier := ua.authTokenService.GetTokenVerifier(USER_REFRESH)
 	userId, err := userTokenVerifier(credentials.RefreshToken)
 	if err != nil {
 		err = httpHandler.Forbidden("Invalid Credentials", err)

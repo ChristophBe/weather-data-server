@@ -117,10 +117,13 @@ func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType Token
 			err = errors.New("unexpected token typ")
 			return
 		}
-		exp := int64(claims["exp"].(float64))
-		if time.Unix(exp, 0).Before(time.Now()) {
-			err = TokenExpiredError{}
+		if tokenType != NODE_AUTH {
+			exp := int64(claims["exp"].(float64))
+			if time.Unix(exp, 0).Before(time.Now()) {
+				err = TokenExpiredError{}
+			}
 		}
+
 
 		sub = int64(claims["sub"].(float64))
 	}
