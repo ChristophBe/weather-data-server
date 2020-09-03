@@ -47,7 +47,6 @@ func (a authTokenServiceImpl) GenerateUserRefreshToken(user models.User) (signed
 func (a authTokenServiceImpl) GenerateNodeAccessToken(node models.MeasuringNode) (signedToken string, err error) {
 	tokenContext := authTokenContext{
 		Type:     NODE_AUTH,
-		Expiring: time.Hour * time.Duration(24),
 		Sub:      node.Id,
 	}
 	signedToken, err = a.generateToken(tokenContext)
@@ -75,12 +74,17 @@ func (a authTokenServiceImpl) GenerateUserEnableToken(user models.User) (signedT
 }
 
 func (a authTokenServiceImpl) generateToken(context authTokenContext) (signedToken string, err error) {
-	expirationTime := time.Now().Add(context.Expiring)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+
+	claims := jwt.MapClaims{
 		"sub":  context.Sub,
 		"type": context.Type.toString(),
-		"exp":  expirationTime.Unix(),
-	})
+	}
+	if context.Expiring != time.Duration(0) {
+		expirationTime := time.Now().Add(context.Expiring)
+		claims["exp"] = expirationTime.Unix()
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	conf, err := config.GetConfigManager().GetConfig()
 	if err != nil {
@@ -117,13 +121,6 @@ func (a authTokenServiceImpl) verifyToken(tokenString string, expectedType Token
 			err = errors.New("unexpected token typ")
 			return
 		}
-		if tokenType != NODE_AUTH {
-			exp := int64(claims["exp"].(float64))
-			if time.Unix(exp, 0).Before(time.Now()) {
-				err = TokenExpiredError{}
-			}
-		}
-
 
 		sub = int64(claims["sub"].(float64))
 	}
