@@ -22,8 +22,8 @@ func (measuringRepositoryImpl) measuringResultHandler(record neo4j.Record) (inte
 		Id:          node.Id(),
 		TimeStamp:   parseTimeProp(props["timeStamp"], time.Unix(0, 0)),
 		Temperature: parseFloatProp(props["temperature"], .0),
-		Humidity:    parseFloatProp(props["pressure"], .0),
-		Pressure:    parseFloatProp(props["humidity"], .0),
+		Pressure:    parseFloatProp(props["pressure"], .0),
+		Humidity:    parseFloatProp(props["humidity"], .0),
 	}
 
 	return measurement, nil
